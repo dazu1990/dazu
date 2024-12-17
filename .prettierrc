@@ -3,6 +3,6 @@
   "useTabs": false,
   "singleQuote": true,
   "plugins": [
-        "prettier-plugin-organize-imports",
-    ]
+      "prettier-plugin-organize-imports"
+  ]
 }

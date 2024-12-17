@@ -1,8 +1,5 @@
-import './style.css'
-import javascriptLogo from './javascript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.js'
-import {setupInteractionLayer} from './interaction_layer.js'
+import { setupInteractionLayer } from './interaction_layer.js';
+import './style.css';
 
 // document.querySelector('#app').innerHTML = `
 //   <div>
@@ -30,9 +27,8 @@ document.querySelector('#app').innerHTML = `
 
     <div id="interaction_layer_container"></div>
   </div>
-`
+`;
 
 // setupCounter(document.querySelector('#counter'))
 
-
-setupInteractionLayer(document.querySelector('#interaction_layer_container'))
+setupInteractionLayer(document.querySelector('#interaction_layer_container'));

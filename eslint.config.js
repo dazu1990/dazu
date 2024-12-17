@@ -1,5 +1,5 @@
-import globals from "globals";
-import pluginJs from "@eslint/js";
+import pluginJs from '@eslint/js';
+import globals from 'globals';
 
 /** @type {import('eslint').Linter.Config} */
 export default {
