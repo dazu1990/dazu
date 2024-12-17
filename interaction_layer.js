@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
-import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+
+import { createGround } from './canvas_functions/createGround';
+import {createLogo} from './canvas_functions/createLogo';
 
 export const setupInteractionLayer = (canvasContainerElement) => {
   console.log('Setting up interaction layer');
@@ -31,16 +32,7 @@ export const setupInteractionLayer = (canvasContainerElement) => {
     );
     camera.position.set(300, 200, 0);
 
-    let textGroup = new THREE.Group();
-    let text = ['D', 'A', 'Z', 'U'],
-      bevelEnabled = true,
-      font = undefined;
-
-    const depth = 5,
-      size = 90,
-      curveSegments = 2,
-      bevelThickness = 0.2,
-      bevelSize = 0.2;
+  
 
     // controls
 
@@ -65,10 +57,7 @@ export const setupInteractionLayer = (canvasContainerElement) => {
       color: 0xf0af18,
       flatShading: true,
     });
-    const defaultTextMaterial = new THREE.MeshPhongMaterial({
-      color: 0xff00ff,
-      flatShading: true,
-    });
+    
 
     const obstacleOptions = [
       {
@@ -192,96 +181,13 @@ export const setupInteractionLayer = (canvasContainerElement) => {
     };
 
     // ground
-
-    const groundGeometry = new THREE.PlaneGeometry(10000, 10000);
-    const groundMaterial = new THREE.MeshPhongMaterial({
-      color: 0x999999,
-      depthWrite: false,
-    });
-    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = 0;
-    ground.receiveShadow = true;
-    scene.add(ground);
+    createGround(scene);
 
     // text
-    const loadFont = () => {
-      const loader = new FontLoader();
-      loader.load(
-        'fonts/Climate_Crisis/Climate Crisis_Regular.json',
-        function (response) {
-          font = response;
-          createText();
-        },
-      );
-    };
-
-    const createText = () => {
-      text.forEach((letter, i) => {
-        let textGeo = new TextGeometry(letter, {
-          font: font,
-          size: size,
-          depth: depth,
-          curveSegments: curveSegments,
-          bevelThickness: bevelThickness,
-          bevelSize: bevelSize,
-          bevelEnabled: bevelEnabled,
-        });
-
-        textGeo.computeBoundingBox();
-
-        const centerXOffset =
-          -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
-
-        let textMesh = new THREE.Mesh(textGeo, defaultTextMaterial);
-        let widthlimit = (window.innerWidth * 0.25) / 2;
-        let heightlimit = (window.innerHeight * 0.2) / 2;
-
-        // // Set position based on the index
-        switch (i) {
-          case 0:
-            // bottom-left corner - D
-            textMesh.position.x = widthlimit;
-            textMesh.position.z = heightlimit - centerXOffset;
-            break;
-          case 1:
-            // Top-left corner - Z
-            textMesh.position.x = -widthlimit - centerXOffset;
-            textMesh.position.z = heightlimit - centerXOffset;
-            break;
-
-          case 2:
-            // Top-right corner - A
-            textMesh.position.x = -widthlimit - centerXOffset;
-            textMesh.position.z = -heightlimit + centerXOffset;
-            break;
-          case 3:
-            // Bottom-right corner - U
-            textMesh.position.x = widthlimit;
-            textMesh.position.z = -heightlimit - centerXOffset;
-            break;
-        }
-
-        // textMesh.position.x = centerOffset;
-        // textMesh.position.y = 0;
-        textMesh.position.y = 0;
-        console.log(textMesh.position);
-
-        // textMesh.rotation.x = camera.rotation.x;
-        // textMesh.rotation.y = camera.rotation.y;
-        // textMesh.rotation.z = camera.rotation.z;
-
-        textMesh.lookAt(camera.position);
-
-        textGroup.add(textMesh);
-      });
-
-      scene.add(textGroup);
-    };
+    createLogo(scene, camera);
 
     // create meshes
 
-    loadFont();
 
     for (let i = 0; i < amountObstacles; i++) {
       const obstacleMesh = generateObstacle();
