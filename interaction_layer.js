@@ -3,16 +3,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import { createGround } from './canvas_functions/createGround';
 import {createLogo} from './canvas_functions/createLogo';
+import {createObstacles} from './canvas_functions/createObstacles';
+import { THEME } from './constants';
 
 export const setupInteractionLayer = () => {
   console.log('Setting up interaction layer');
+
+  const colors = THEME.colors.three;
 
   let camera, controls, scene, renderer;
 
   const init = () => {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x13284a);
-    scene.fog = new THREE.Fog( 0x13284a, 1, 1100 );
+    scene.background = colors.pur;
+    scene.fog = new THREE.Fog( colors.pur, 1, 1100 );
     // scene.fog = new THREE.FogExp2(0x13284a, 0.0015);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -24,9 +28,6 @@ export const setupInteractionLayer = () => {
     const lightDirection = { x: 1, y: 1, z: 1 };
 
 
-    const amountObstacles = 7500;
-    const obstacleDensity = 4;
-    const obstacleArea = amountObstacles / obstacleDensity;
 
     camera = new THREE.PerspectiveCamera(
       60,
@@ -58,132 +59,14 @@ export const setupInteractionLayer = () => {
 
     // world
 
-    const defaultMaterial = new THREE.MeshPhongMaterial({
-      color: 0xf0af18,
-      flatShading: true,
-    });
+   
     
 
-    const obstacleOptions = [
-      {
-        type: 'cube',
-        defaultGeometry: new THREE.BoxGeometry(10, 10, 10),
-        defaultMaterial: defaultMaterial,
-      },
-      {
-        type: 'sphere',
-        defaultGeometry: new THREE.SphereGeometry(10, 32, 32),
-        defaultMaterial: defaultMaterial,
-      },
-      {
-        type: 'cone',
-        defaultGeometry: new THREE.ConeGeometry(10, 30, 5, 1),
-        defaultMaterial: defaultMaterial,
-      },
-      {
-        type: 'cylinder',
-        defaultGeometry: new THREE.CylinderGeometry(10, 10, 10, 32),
-        defaultMaterial: defaultMaterial,
-      },
-      {
-        type: 'torus',
-        defaultGeometry: new THREE.TorusGeometry(10, 1, 16, 100),
-        defaultMaterial: defaultMaterial,
-      },
-      {
-        type: 'torusKnot',
-        defaultGeometry: new THREE.TorusKnotGeometry(10, 1, 100, 16),
-        defaultMaterial: defaultMaterial,
-      },
-      {
-        type: 'tetrahedron',
-        defaultGeometry: new THREE.TetrahedronGeometry(10),
-        defaultMaterial: defaultMaterial,
-      },
-    ];
+    
 
-    const generateObstacle = () => {
-      const obstacle =
-        obstacleOptions[Math.floor(Math.random() * obstacleOptions.length)];
+    
 
-      let geometry;
-      let material = defaultMaterial;
-
-      const randMod = (min, max) => {
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-      };
-
-      switch (obstacle.type) {
-        case 'cube':
-          geometry = new THREE.BoxGeometry(
-            randMod(5, 10),
-            randMod(5, 10),
-            randMod(5, 10),
-          );
-          break;
-        case 'sphere':
-          geometry = new THREE.SphereGeometry(randMod(5, 10), 32, 32);
-          break;
-        case 'cone':
-          geometry = new THREE.ConeGeometry(
-            randMod(5, 10),
-            randMod(5, 30),
-            randMod(5, 15),
-            1,
-          );
-          break;
-        case 'cylinder':
-          geometry = new THREE.CylinderGeometry(
-            randMod(5, 10),
-            randMod(5, 10),
-            randMod(5, 10),
-            32,
-          );
-          break;
-        case 'torus':
-          geometry = new THREE.TorusGeometry(
-            randMod(3, 10),
-            randMod(1, 5),
-            16,
-            100,
-          );
-          break;
-        case 'torusKnot':
-          geometry = new THREE.TorusKnotGeometry(
-            randMod(3, 10),
-            randMod(1, 5),
-            100,
-            16,
-          );
-          break;
-        case 'tetrahedron':
-          geometry = new THREE.TetrahedronGeometry(10);
-          break;
-        default:
-          geometry = new THREE.BoxGeometry(10, 10, 10);
-      }
-
-      const meshOutput = new THREE.Mesh(geometry, material);
-      const scaleModifer = randMod(1, 2);
-      meshOutput.scale.set(scaleModifer, scaleModifer, scaleModifer);
-
-      return meshOutput;
-    };
-
-    const placeObstacle = (obstacleMesh) => {
-      obstacleMesh.position.x = Math.random() * obstacleArea - obstacleArea / 2;
-      obstacleMesh.position.y = 0;
-      obstacleMesh.position.z = Math.random() * obstacleArea - obstacleArea / 2;
-
-      obstacleMesh.rotation.x = Math.random() * 2 * Math.PI;
-      obstacleMesh.rotation.y = Math.random() * 2 * Math.PI;
-      obstacleMesh.updateMatrix();
-      obstacleMesh.matrixAutoUpdate = false;
-
-      scene.add(obstacleMesh);
-    };
+    
 
     // ground
     createGround(scene, lightDirection);
@@ -191,26 +74,20 @@ export const setupInteractionLayer = () => {
     // DAZU text
     createLogo(scene, camera);
 
-    // obstacle meshes
-    for (let i = 0; i < amountObstacles; i++) {
-      const obstacleMesh = generateObstacle();
-      placeObstacle(obstacleMesh);
-
-      scene.add(obstacleMesh);
-    }
+    // obstacles
+    createObstacles(scene);
+    
 
     // lights
-
-
     const dirLight1 = new THREE.DirectionalLight(0xffffff, 3);
     dirLight1.position.set(lightDirection.x, lightDirection.y, lightDirection.z);
     scene.add(dirLight1);
 
-    const dirLight2 = new THREE.DirectionalLight(0x002288, 3);
+    const dirLight2 = new THREE.DirectionalLight(THEME.colors.three.pur, 3);
     dirLight2.position.set(-1, -1, -1);
     scene.add(dirLight2);
 
-    const ambientLight = new THREE.AmbientLight(0x555555);
+    const ambientLight = new THREE.AmbientLight(THEME.colors.three.org, 0.5);
     scene.add(ambientLight);
 
     //

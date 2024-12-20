@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { THEME } from '../constants';
 
 export const createLogo = (scene, camera) => {
   let textGroup = new THREE.Group();
@@ -9,13 +10,15 @@ export const createLogo = (scene, camera) => {
     font = undefined;
 
   const depth = 5,
-    size = 90,
+    size = 125,
     curveSegments = 2,
     bevelThickness = 0.2,
     bevelSize = 0.2;
 
+  const themeColors = THEME.colors.three;
+
   const defaultTextMaterial = new THREE.MeshPhongMaterial({
-    color: 0xff00ff,
+    color: themeColors.org,
     flatShading: true,
   });
 
