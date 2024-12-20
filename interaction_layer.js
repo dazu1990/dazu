@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createGround } from './canvas_functions/createGround';
 import {createLogo} from './canvas_functions/createLogo';
 
-export const setupInteractionLayer = (canvasContainerElement) => {
+export const setupInteractionLayer = () => {
   console.log('Setting up interaction layer');
 
   let camera, controls, scene, renderer;
@@ -12,7 +12,8 @@ export const setupInteractionLayer = (canvasContainerElement) => {
   const init = () => {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x13284a);
-    scene.fog = new THREE.FogExp2(0x13284a, 0.0015);
+    scene.fog = new THREE.Fog( 0x13284a, 1, 1100 );
+    // scene.fog = new THREE.FogExp2(0x13284a, 0.0015);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -20,8 +21,11 @@ export const setupInteractionLayer = (canvasContainerElement) => {
     renderer.setAnimationLoop(animate);
     document.body.appendChild(renderer.domElement);
 
-    const amountObstacles = 3000;
-    const obstacleDensity = 1.75;
+    const lightDirection = { x: 1, y: 1, z: 1 };
+
+
+    const amountObstacles = 7500;
+    const obstacleDensity = 4;
     const obstacleArea = amountObstacles / obstacleDensity;
 
     camera = new THREE.PerspectiveCamera(
@@ -47,7 +51,8 @@ export const setupInteractionLayer = (canvasContainerElement) => {
     controls.screenSpacePanning = false;
 
     controls.minDistance = 50;
-    controls.maxDistance = 300;
+    controls.maxDistance = 325;
+    // controls.maxDistance = 30000;
 
     controls.maxPolarAngle = Math.PI / 2;
 
@@ -181,14 +186,12 @@ export const setupInteractionLayer = (canvasContainerElement) => {
     };
 
     // ground
-    createGround(scene);
+    createGround(scene, lightDirection);
 
-    // text
+    // DAZU text
     createLogo(scene, camera);
 
-    // create meshes
-
-
+    // obstacle meshes
     for (let i = 0; i < amountObstacles; i++) {
       const obstacleMesh = generateObstacle();
       placeObstacle(obstacleMesh);
@@ -198,8 +201,9 @@ export const setupInteractionLayer = (canvasContainerElement) => {
 
     // lights
 
+
     const dirLight1 = new THREE.DirectionalLight(0xffffff, 3);
-    dirLight1.position.set(1, 1, 1);
+    dirLight1.position.set(lightDirection.x, lightDirection.y, lightDirection.z);
     scene.add(dirLight1);
 
     const dirLight2 = new THREE.DirectionalLight(0x002288, 3);
