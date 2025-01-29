@@ -1,5 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 import { createGround } from './canvas_functions/createGround';
 import {createLogo} from './canvas_functions/createLogo';
@@ -11,7 +16,7 @@ export const setupInteractionLayer = () => {
 
   const colors = THEME.colors.three;
 
-  let camera, controls, scene, renderer;
+  let camera, controls, scene, renderer, composer;
 
   const init = () => {
     scene = new THREE.Scene();
@@ -24,6 +29,8 @@ export const setupInteractionLayer = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setAnimationLoop(animate);
     document.body.appendChild(renderer.domElement);
+
+
 
     const lightDirection = { x: 1, y: 1, z: 1 };
 
@@ -59,14 +66,28 @@ export const setupInteractionLayer = () => {
 
     // world
 
-   
-    
+    const bloomParams = {
+      threshold: 0,
+      strength: 1,
+      radius: 0.5,
+      exposure: 1
+    };
 
-    
+    // Create a render pass for the scene
+    const renderPass = new RenderPass(scene, camera);
 
-    
+    // Create an UnrealBloomPass for bloom effect
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+    bloomPass.threshold = bloomParams.bloomThreshold;
+    bloomPass.strength = bloomParams.bloomStrength;
+    bloomPass.radius = bloomParams.bloomRadius;
 
-    
+    // Create an EffectComposer for post-processing
+    composer = new EffectComposer(renderer);
+    composer.addPass(renderPass); // Add the render pass
+    composer.addPass(bloomPass); // Add the bloom pass
+    composer.addPass(new OutputPass()); // Add the output pass
+
 
     // ground
     createGround(scene, lightDirection);
@@ -100,15 +121,19 @@ export const setupInteractionLayer = () => {
     camera.updateProjectionMatrix();
 
     renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
+
   };
 
   const animate = () => {
     controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
 
     render();
+    
   };
 
   const render = () => {
+    composer.render();
     renderer.render(scene, camera);
   };
 

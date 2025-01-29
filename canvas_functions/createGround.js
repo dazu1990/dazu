@@ -124,8 +124,8 @@ export const createGround = (scene, lightDirection) => {
 
   // Create a plane geometry with the specified width, depth, and segments
   const geometry = new THREE.PlaneGeometry(
-    1500, // Width of the plane
-    1500, // Depth of the plane
+    1000, // Width of the plane
+    1000, // Depth of the plane
     worldWidth - 1, // Number of width segments
     worldDepth - 1, // Number of depth segments
   );
