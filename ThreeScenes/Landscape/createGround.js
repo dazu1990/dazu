@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ImprovedNoise } from 'three/addons/math/ImprovedNoise.js';
-import {THEME} from '../constants';
+import {THEME} from '../../constants';
 
 const generateHeight = (width, height) => {
   const heightAmplitude = 0.25; // Amplitude of the height data

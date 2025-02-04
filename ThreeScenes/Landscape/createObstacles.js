@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { THEME } from '../constants';
+import { THEME } from '../../constants';
 
 const themeColors = THEME.colors.three;
 
