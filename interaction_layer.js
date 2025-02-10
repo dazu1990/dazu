@@ -1,4 +1,5 @@
 import { initLandscape } from './ThreeScenes/Landscape/init';
+import { initTilt } from './ThreeScenes/Tilt/init';
 
 
 export const setupInteractionLayer = () => {
@@ -9,7 +10,7 @@ export const setupInteractionLayer = () => {
       initLandscape();
     break;
     default:
-      initLandscape();
+      initTilt();
 
       console.log('No scene found');
     break;
