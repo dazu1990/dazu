@@ -90,15 +90,18 @@ export const createLogo = (scene, camera) => {
       // textMesh.position.x = centerOffset;
       // textMesh.position.y = 0;
       textMesh.position.y = 0;
-      console.log(textMesh.position);
+      textMesh.castShadow = true;
+
 
       textMesh.rotation.x = camera.rotation.x;
     //   textMesh.rotation.y = camera.rotation.y;
     //   textMesh.rotation.z = camera.rotation.z;
 
-    //   textMesh.lookAt(camera.position);
+      // textMesh.lookAt(camera.position);
+      // textMesh.lookAt({ x: 0, y: 100, z: 0 });
 
       textGroup.add(textMesh);
+  
 
     });
     // for (let i = 0; i < textGroup.children.length; i++) {

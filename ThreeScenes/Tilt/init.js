@@ -8,7 +8,9 @@ import { createLogo } from './createLogo';
 import { createPlatform } from './createPlatform';
 import { createSphere } from './createSphere';
 
-import { THEME } from '../../constants';
+import { THEME, physicsScaleRate } from '../../constants';
+
+const debug = true;
 
 export const initTilt = () => {
   console.log('Tilt scene');
@@ -17,18 +19,13 @@ export const initTilt = () => {
   let camera, scene, renderer, rotateGroup, clock;
   const mouse = { x: 0, y: 0, oldX: 0, oldY: 0, down: false };
   rotateGroup = new THREE.Group();
-  const physicsScaleRate = 50;
 
   let physicsWorld;
  
 
+  let spheres = [];
+  const numOfSpheres = 40;
 
-  let rigidBodies = [],
-    tmpTrans;
-
-  let sphereMesh;
-  let sphereBody;
-  let sphereCollider;
   let controls;
 
   let platform, platformBody, platformCollider;
@@ -53,8 +50,8 @@ export const initTilt = () => {
 
     // Create a new Three.js scene
     scene = new THREE.Scene();
-    scene.background = new THREE.Color('#AAAAAA');
-    // scene.background = colors.pur;
+    // scene.background = new THREE.Color('#AAAAAA');
+    scene.background = colors.pur;
     // scene.fog = new THREE.Fog(colors.pur, -300, 0);
 
     //camera
@@ -62,11 +59,12 @@ export const initTilt = () => {
       50,
       window.innerWidth / window.innerHeight,
       1,
-      1000,
+      10000,
     );
-    camera.position.set(0, 5, 50);
-    // camera.position.set(0, 50, window.innerHeight);
-    // camera.position.set(0, 1000, 0);
+    // debug angle
+    // camera.position.set(0, 5, 50);
+    // camera.position.set(0, 50, window.innerHeight*1.25);
+    camera.position.set(0, 1000, 0);
     camera.lookAt(0, 0, 0);
 
     
@@ -115,39 +113,44 @@ export const initTilt = () => {
 
     // Platform
     const platform = createPlatform(scene);
+    const getPlatformBoundingBoxPoints = new THREE.Box3().setFromObject(platform.mesh);
+    console.log('Platform bounding box', getPlatformBoundingBoxPoints);
 
-    sphereMesh = createSphere(physicsScaleRate);
+
+    // create Objects
+    for (let i = 0; i < numOfSpheres; i++) {
+      const x = Math.random() * (getPlatformBoundingBoxPoints.max.x - getPlatformBoundingBoxPoints.min.x) + getPlatformBoundingBoxPoints.min.x;
+      const z =  Math.random() * (getPlatformBoundingBoxPoints.max.z - getPlatformBoundingBoxPoints.min.z) + getPlatformBoundingBoxPoints.min.z;
+      let tempSphere = createSphere(x,z);
+      tempSphere.createdBody = physicsWorld.createRigidBody(tempSphere.rigidBody);
+      tempSphere.createdCollider = physicsWorld.createCollider(tempSphere.colliderBody, tempSphere.createdBody);
+      spheres.push(tempSphere);
+      scene.add(tempSphere.mesh);
+    }
     
     
 
     rotateGroup.add(platform.mesh);
     scene.add(rotateGroup);
-    scene.add(sphereMesh.mesh);
 
     platformBody = physicsWorld.createRigidBody(platform.rigidBody);
     platformCollider = physicsWorld.createCollider(platform.collider, platformBody)
 
 
-
-    sphereBody = physicsWorld.createRigidBody(sphereMesh.rigidBody);
-    sphereCollider = physicsWorld.createCollider(sphereMesh.colliderBody, sphereBody);
-    // sphereCollider.friction(0.2)
-
-
-    // Debug points
-    console.log('physicsWorld', physicsWorld); 
-    if(physicsWorld.gravity) {
-
-      pointsGeo = new THREE.BufferGeometry();
-      pointsMaterial = new THREE.PointsMaterial({ vertexColors: true, size: 1 });
-      renderDebugView();
-      points = new THREE.Points(pointsGeo, pointsMaterial);
-      scene.add(points);
-      console.log('points', points);
-    } else {  
-      console.log('No physicsWorld');
+    // Debug points 
+    if(debug){
+      setupPhysicsDebug();
     }
   };
+
+  const setupPhysicsDebug = () => {
+    pointsGeo = new THREE.BufferGeometry();
+    pointsMaterial = new THREE.PointsMaterial({ vertexColors: true, size: 1 });
+    renderDebugView();
+    points = new THREE.Points(pointsGeo, pointsMaterial);
+    scene.add(points);
+  };
+
 
   const setupPhysicsWorld = () => {
     const earthGravity =  9.81;
@@ -171,15 +174,15 @@ export const initTilt = () => {
   
     // Create quaternions for the rotations around the x and y axes
     const quaternionX = new THREE.Quaternion();
-    const quaternionY = new THREE.Quaternion();
+    const quaternionZ = new THREE.Quaternion();
   
     // Set the quaternions based on the mouse delta values
-    quaternionX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaY * 0.3); // Rotation around x-axis
-    quaternionY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), deltaX * 0.3); // Rotation around y-axis
+    quaternionX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaY * 0.35); // Rotation around x-axis
+    quaternionZ.setFromAxisAngle(new THREE.Vector3(0, 0, 1), deltaX * 0.35); // Rotation around z-axis
   
     // Multiply the current quaternion by the new quaternions
-    rotateGroup.quaternion.multiplyQuaternions(quaternionY, rotateGroup.quaternion);
     rotateGroup.quaternion.multiplyQuaternions(quaternionX, rotateGroup.quaternion);
+    rotateGroup.quaternion.multiplyQuaternions(quaternionZ, rotateGroup.quaternion);
   
     // Update the platform body's rotation to match the rotateGroup's quaternion
     const quaternion = rotateGroup.quaternion;
@@ -222,12 +225,14 @@ export const initTilt = () => {
   const animate = () => {
     // controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
     // updateRotateGroup();
-    let position = sphereBody.translation();
-    // console.log("Rigid-body position: ", position.x, position.y, position.z);
-    sphereMesh.mesh.position.set(position.x * physicsScaleRate, position.y * physicsScaleRate, position.z * physicsScaleRate);
+    spheres.forEach((sphere) => {
+      let position = sphere.createdBody.translation();
+      sphere.mesh.position.set(position.x * physicsScaleRate, position.y * physicsScaleRate, position.z * physicsScaleRate);
+    });
+    
     renderFrame();
     physicsWorld.step();
-    renderDebugView();
+    if(debug) renderDebugView();
 
 
   };

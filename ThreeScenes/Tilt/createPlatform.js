@@ -1,20 +1,17 @@
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d';
+import { THEME } from '../../constants';
 
 
 export const createPlatform = () => {
-
+    // TO DO : match the platform size with the rigid body size
     const platformHeight = 5;
 
     let pos = {x: 0, y: -(platformHeight/2), z: 0};
-    // let scale = {x: window.innerWidth, y: platformHeight, z: window.innerHeight};
-    // let scale = {x: window.innerWidth/10, y: platformHeight, z: window.innerHeigh/10};
-
-    let scale = {x: 10, y: platformHeight, z: 10};
-
-
+    let scale = {x: window.innerWidth, y: platformHeight, z: window.innerHeight};
+    
     const platformMaterial = new THREE.MeshLambertMaterial({
-        color: 0xEEEEEEE,
+        color: THEME.colors.three.dpur,
         flatShading: true,
     });
     const platformGeometry = new THREE.BoxGeometry( scale.x, scale.y, scale.z );

@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+export const physicsScaleRate = 50;
+
 export const THEME = {
     colors:{
         hex:{
@@ -42,6 +44,7 @@ export const THEME = {
             brwn: 'hsla(34, 24, 29, 1)',
             dpur: 'hsla(267, 37, 26, 1)',
         }
-    }
+    },
+    
     
 };
