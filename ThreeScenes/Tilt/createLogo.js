@@ -1,7 +1,8 @@
 import * as THREE from 'three';
+import RAPIER from '@dimforge/rapier3d';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-import { THEME } from '../../constants';
+import { THEME, physicsScaleRate } from '../../constants';
 
 export const createLogo = (scene, camera) => {
   let textGroup = new THREE.Group();
@@ -89,7 +90,7 @@ export const createLogo = (scene, camera) => {
 
       // textMesh.position.x = centerOffset;
       // textMesh.position.y = 0;
-      textMesh.position.y = 0;
+      textMesh.position.y = 15;
       textMesh.castShadow = true;
 
 
@@ -100,7 +101,40 @@ export const createLogo = (scene, camera) => {
       // textMesh.lookAt(camera.position);
       // textMesh.lookAt({ x: 0, y: 100, z: 0 });
 
+      // Create the physics body and collider for the letter
+      const vertices = [];
+      const indices = [];
+
+      textGeo.attributes.position.array.forEach((v, idx) => {
+        vertices.push(v / physicsScaleRate);
+      });
+
+      console.log('textGeo:', letter + '', textGeo);
+
+      // for (let i = 0; i < textGeo.index.count; i += 3) {
+      //   indices.push(
+      //     textGeo.index.array[i],
+      //     textGeo.index.array[i + 1],
+      //     textGeo.index.array[i + 2]
+      //   );
+      // }
+
+      let collider = RAPIER.ColliderDesc.trimesh(vertices, indices);
+
+      let rigidBody = RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(
+        textMesh.position.x / physicsScaleRate,
+        textMesh.position.y / physicsScaleRate,
+        textMesh.position.z / physicsScaleRate
+      );
+
+     //  const createdBody = physicsWorld.createRigidBody(rigidBody);
+     //  const createdCollider = physicsWorld.createCollider(collider, createdBody);
+
+      textMesh.userData.rigidBody = rigidBody;
+      textMesh.userData.collider = collider;
+
       textGroup.add(textMesh);
+      
   
 
     });

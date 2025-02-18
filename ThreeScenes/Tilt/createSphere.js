@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { THEME, physicsScaleRate } from '../../constants';
 
 export const createSphere = (startX, startY, startZ) => {
-  console.log('createSphere', startX, startY,  startZ);
+  console.log('createSphere', startX, startY, startZ);
   let pos = { x: startX, y: startY, z: startZ };
   let radius = 20;
 
@@ -22,16 +22,10 @@ export const createSphere = (startX, startY, startZ) => {
   let rigidBody = RAPIER.RigidBodyDesc.dynamic().setTranslation(
     pos.x / physicsScaleRate,
     pos.y / physicsScaleRate,
-    pos.z / physicsScaleRate,
-  );
-  // let rigidBody = RAPIER.RigidBodyDesc.dynamic().setTranslation(
-  //   pos.x,
-  //   pos.y,
-  //   pos.z,
-  // );
+    pos.z / physicsScaleRate
+  ).setCcdEnabled(true); // Enable continuous collision detection
 
-  let colliderBody = RAPIER.ColliderDesc.ball(radius).setRestitution(.8);
-
+  let colliderBody = RAPIER.ColliderDesc.ball(radius / physicsScaleRate).setRestitution(0.8);
 
   return { mesh, rigidBody, colliderBody };
 };

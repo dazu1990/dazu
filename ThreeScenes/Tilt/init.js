@@ -1,4 +1,3 @@
-
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -27,8 +26,11 @@ export const initTilt = () => {
   const numOfSpheres = 40;
 
   let controls;
+  let eventQueue;
 
   let platform, platformBody, platformCollider;
+
+  let logo, logoBodies = [], logoColliders = [];
 
   let pointsGeo, pointsMaterial, points;
 
@@ -108,11 +110,13 @@ export const initTilt = () => {
     // Add objects to the scene
 
     // DAZU text
-    const logo = createLogo(scene, camera);
+    logo = createLogo(scene, camera);
     rotateGroup.add(logo);
-
-    // Platform
-    const platform = createPlatform(scene);
+    console.log('Logo', logo);
+    
+    
+    // Adding platform setup logic to ensure platform is initialized after logo
+    platform = createPlatform(scene);
     const getPlatformBoundingBoxPoints = new THREE.Box3().setFromObject(platform.mesh);
     // console.log('Platform bounding box', getPlatformBoundingBoxPoints);
 
@@ -130,7 +134,7 @@ export const initTilt = () => {
       scene.add(tempSphere.mesh);
     }
     
-    
+    console.log(physicsWorld);
 
     rotateGroup.add(platform.mesh);
     scene.add(rotateGroup);
@@ -147,7 +151,7 @@ export const initTilt = () => {
 
   const setupPhysicsDebug = () => {
     pointsGeo = new THREE.BufferGeometry();
-    pointsMaterial = new THREE.PointsMaterial({ vertexColors: true, size: 10 });
+    pointsMaterial = new THREE.PointsMaterial({ vertexColors: true, size: 15 });
     renderDebugView();
     points = new THREE.Points(pointsGeo, pointsMaterial);
     scene.add(points);
@@ -158,7 +162,8 @@ export const initTilt = () => {
     const earthGravity =  9.81;
     let gravity = { x: 0.0, y: -(earthGravity), z: 0.0 };
     physicsWorld = new RAPIER.World(gravity);
-    
+    eventQueue = new RAPIER.EventQueue(true); // Initialize the event queue
+
 
   };
   
@@ -215,6 +220,7 @@ export const initTilt = () => {
       updateRotateGroup();
     //   console.log('Mouse move', mouse);
     }
+    
   };
 
   const onWindowResize = () => {
@@ -225,13 +231,15 @@ export const initTilt = () => {
   };
 
   const animate = () => {
-    // console.log('clock', clock);
-    // controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
-    // updateRotateGroup();
+    const deltaTime = clock.getDelta();
+
     spheres.forEach((sphere) => {
       let position = sphere.createdBody.translation();
-      // sphere.mesh.position.set((position.x * physicsScaleRate), (position.y * physicsScaleRate), (position.z * physicsScaleRate));
-      sphere.mesh.position.set((position.x ), (position.y ), (position.z ));
+      sphere.mesh.position.set(
+        position.x * physicsScaleRate,
+        position.y * physicsScaleRate,
+        position.z * physicsScaleRate
+      );
 
       if (sphere.mesh.position.y < -1200) {
         spheres.splice(spheres.indexOf(sphere), 1);
@@ -239,21 +247,16 @@ export const initTilt = () => {
         scene.remove(sphere.mesh);
       }
     });
-    
+
     renderFrame();
-    physicsWorld.step();
-    if(debug) renderDebugView();
-
-
+    physicsWorld.step(eventQueue, deltaTime, 10, 1 / 240);
+    if (debug) renderDebugView();
   };
 
   const renderFrame = () => {
-    // let deltaTime = clock.getDelta();
 
     renderer.render(scene, camera);
   };
 
     init();
-  //render(); // remove when using animation loop
-  //
 };
