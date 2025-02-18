@@ -22,12 +22,12 @@ import './style.css';
 //   </div>
 // `
 
-document.querySelector('#app').innerHTML = `
-  <div>
+// document.querySelector('#interaction_layer_container').innerHTML = `
+//   <div>
 
-    <div id="interaction_layer_container"></div>
-  </div>
-`;
+//     <div id="interaction_layer_container"></div>
+//   </div>
+// `;
 
 // setupCounter(document.querySelector('#counter'))
 
