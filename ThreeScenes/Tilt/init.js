@@ -114,14 +114,16 @@ export const initTilt = () => {
     // Platform
     const platform = createPlatform(scene);
     const getPlatformBoundingBoxPoints = new THREE.Box3().setFromObject(platform.mesh);
-    console.log('Platform bounding box', getPlatformBoundingBoxPoints);
+    // console.log('Platform bounding box', getPlatformBoundingBoxPoints);
 
 
     // create Objects
+    // TO DO: stagger the creation of the spheres
     for (let i = 0; i < numOfSpheres; i++) {
       const x = Math.random() * (getPlatformBoundingBoxPoints.max.x - getPlatformBoundingBoxPoints.min.x) + getPlatformBoundingBoxPoints.min.x;
+      const y = Math.random() * (100 - 20) + 20;
       const z =  Math.random() * (getPlatformBoundingBoxPoints.max.z - getPlatformBoundingBoxPoints.min.z) + getPlatformBoundingBoxPoints.min.z;
-      let tempSphere = createSphere(x,z);
+      let tempSphere = createSphere(x,y,z);
       tempSphere.createdBody = physicsWorld.createRigidBody(tempSphere.rigidBody);
       tempSphere.createdCollider = physicsWorld.createCollider(tempSphere.colliderBody, tempSphere.createdBody);
       spheres.push(tempSphere);
@@ -145,7 +147,7 @@ export const initTilt = () => {
 
   const setupPhysicsDebug = () => {
     pointsGeo = new THREE.BufferGeometry();
-    pointsMaterial = new THREE.PointsMaterial({ vertexColors: true, size: 1 });
+    pointsMaterial = new THREE.PointsMaterial({ vertexColors: true, size: 10 });
     renderDebugView();
     points = new THREE.Points(pointsGeo, pointsMaterial);
     scene.add(points);
@@ -223,11 +225,19 @@ export const initTilt = () => {
   };
 
   const animate = () => {
+    // console.log('clock', clock);
     // controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
     // updateRotateGroup();
     spheres.forEach((sphere) => {
       let position = sphere.createdBody.translation();
-      sphere.mesh.position.set(position.x * physicsScaleRate, position.y * physicsScaleRate, position.z * physicsScaleRate);
+      // sphere.mesh.position.set((position.x * physicsScaleRate), (position.y * physicsScaleRate), (position.z * physicsScaleRate));
+      sphere.mesh.position.set((position.x ), (position.y ), (position.z ));
+
+      if (sphere.mesh.position.y < -1200) {
+        spheres.splice(spheres.indexOf(sphere), 1);
+        physicsWorld.removeRigidBody(sphere.createdBody);
+        scene.remove(sphere.mesh);
+      }
     });
     
     renderFrame();

@@ -2,9 +2,9 @@ import RAPIER from '@dimforge/rapier3d';
 import * as THREE from 'three';
 import { THEME, physicsScaleRate } from '../../constants';
 
-export const createSphere = (startX,startZ) => {
-  console.log('createSphere', startX, startZ);
-  let pos = { x: startX, y: 20, z: startZ };
+export const createSphere = (startX, startY, startZ) => {
+  console.log('createSphere', startX, startY,  startZ);
+  let pos = { x: startX, y: startY, z: startZ };
   let radius = 20;
 
   const sphereMaterial = new THREE.MeshLambertMaterial({
@@ -20,12 +20,17 @@ export const createSphere = (startX,startZ) => {
 
   // Create the physics body
   let rigidBody = RAPIER.RigidBodyDesc.dynamic().setTranslation(
-    pos.x/physicsScaleRate,
-    pos.y,
-    pos.z/physicsScaleRate,
+    pos.x / physicsScaleRate,
+    pos.y / physicsScaleRate,
+    pos.z / physicsScaleRate,
   );
+  // let rigidBody = RAPIER.RigidBodyDesc.dynamic().setTranslation(
+  //   pos.x,
+  //   pos.y,
+  //   pos.z,
+  // );
 
-  let colliderBody = RAPIER.ColliderDesc.ball(radius/physicsScaleRate).setRestitution(.8);
+  let colliderBody = RAPIER.ColliderDesc.ball(radius).setRestitution(.8);
 
 
   return { mesh, rigidBody, colliderBody };
