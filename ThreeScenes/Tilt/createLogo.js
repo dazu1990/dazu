@@ -4,16 +4,14 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { THEME, physicsScaleRate } from '../../constants';
 
-export const createLogo = (scene, camera) => {
+export const createLogo = (scene, camera, physicsWorld) => {
   let textGroup = new THREE.Group();
   let text = ['D', 'A', 'Z', 'U'],
     bevelEnabled = true,
     font = undefined;
 
-  const depth = 5,
+  const depth = 100,
     size = (window.innerWidth * 0.35) / 2,
-    // size = ((window.innerWidth/10 )* 0.35) / 2,
-
     curveSegments = 2,
     bevelThickness = 0.2,
     bevelSize = 0.2;
@@ -26,17 +24,24 @@ export const createLogo = (scene, camera) => {
   });
 
   const loadFont = () => {
-    const loader = new FontLoader();
-    loader.load(
-      'fonts/Climate_Crisis/Climate Crisis_Regular.json',
-      function (response) {
-        font = response;
-        createText();
-      },
-    );
+    return new Promise((resolve, reject) => {
+      const loader = new FontLoader();
+      loader.load(
+        'fonts/Climate_Crisis/Climate Crisis_Regular.json',
+        (response) => {
+          font = response;
+          resolve();
+        },
+        undefined,
+        (error) => {
+          reject(error);
+        }
+      );
+    });
   };
 
   const createText = () => {
+    console.log('createText');
     text.forEach((letter, i) => {
       let textGeo = new TextGeometry(letter, {
         font: font,
@@ -50,23 +55,20 @@ export const createLogo = (scene, camera) => {
 
       textGeo.computeBoundingBox();
 
-        const centerXOffset =
-       ( -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x))/2;
+      const centerXOffset =
+        (-0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x)) / 2;
 
-        const centerYOffset =
+      const centerYOffset =
         -0.5 * (textGeo.boundingBox.max.y - textGeo.boundingBox.min.y);
-    
 
       let textMesh = new THREE.Mesh(textGeo, defaultTextMaterial);
       const paddingMultiplier = 0.2;
-    //   let widthlimit = (window.innerWidth * 0.25) / 2;
-    //   let heightlimit = (window.innerHeight * 0.2) / 2;
 
-      // // Set position based on the index
+      // Set position based on the index
       switch (i) {
         case 0:
           // top-left corner - D
-          textMesh.position.x = -((window.innerWidth * paddingMultiplier) - centerXOffset)*1.5;
+          textMesh.position.x = -((window.innerWidth * paddingMultiplier) - centerXOffset) * 1.5;
           textMesh.position.z = -(window.innerHeight * paddingMultiplier) - centerYOffset;
           break;
         case 1:
@@ -77,47 +79,41 @@ export const createLogo = (scene, camera) => {
 
         case 2:
           // Bottom-left corner - Z
-          textMesh.position.x = -((window.innerWidth * paddingMultiplier) - centerXOffset)*1.5;
+          textMesh.position.x = -((window.innerWidth * paddingMultiplier) - centerXOffset) * 1.5;
           textMesh.position.z = (window.innerHeight * paddingMultiplier) - centerYOffset;
           break;
         case 3:
-            // bottom-right corner - U
-            textMesh.position.x = (window.innerWidth * paddingMultiplier) + centerXOffset;
-            textMesh.position.z = (window.innerHeight * paddingMultiplier) - centerYOffset;
-          
+          // bottom-right corner - U
+          textMesh.position.x = (window.innerWidth * paddingMultiplier) + centerXOffset;
+          textMesh.position.z = (window.innerHeight * paddingMultiplier) - centerYOffset;
           break;
       }
 
-      // textMesh.position.x = centerOffset;
-      // textMesh.position.y = 0;
       textMesh.position.y = 15;
       textMesh.castShadow = true;
 
-
       textMesh.rotation.x = camera.rotation.x;
-    //   textMesh.rotation.y = camera.rotation.y;
-    //   textMesh.rotation.z = camera.rotation.z;
-
-      // textMesh.lookAt(camera.position);
-      // textMesh.lookAt({ x: 0, y: 100, z: 0 });
 
       // Create the physics body and collider for the letter
       const vertices = [];
       const indices = [];
 
-      textGeo.attributes.position.array.forEach((v, idx) => {
+      textGeo.attributes.position.array.forEach((v) => {
         vertices.push(v / physicsScaleRate);
       });
 
-      console.log('textGeo:', letter + '', textGeo);
+      if (textGeo.index !== null && textGeo.index !== undefined) {
+        for (let i = 0; i < textGeo.index.count; i++) {
+          indices.push(textGeo.index.array[i]);
+        }
+      } else {
+        // Handle non-indexed geometry
+        for (let i = 0; i < vertices.length / 3; i++) {
+          indices.push(i);
+        }
+      }
 
-      // for (let i = 0; i < textGeo.index.count; i += 3) {
-      //   indices.push(
-      //     textGeo.index.array[i],
-      //     textGeo.index.array[i + 1],
-      //     textGeo.index.array[i + 2]
-      //   );
-      // }
+      console.log('textGeo:', letter + '', textGeo);
 
       let collider = RAPIER.ColliderDesc.trimesh(vertices, indices);
 
@@ -125,26 +121,21 @@ export const createLogo = (scene, camera) => {
         textMesh.position.x / physicsScaleRate,
         textMesh.position.y / physicsScaleRate,
         textMesh.position.z / physicsScaleRate
-      );
-
-     //  const createdBody = physicsWorld.createRigidBody(rigidBody);
-     //  const createdCollider = physicsWorld.createCollider(collider, createdBody);
+      ).setRotation({
+        x: textMesh.quaternion.x,
+        y: textMesh.quaternion.y,
+        z: textMesh.quaternion.z,
+        w: textMesh.quaternion.w,
+      });
 
       textMesh.userData.rigidBody = rigidBody;
       textMesh.userData.collider = collider;
 
       textGroup.add(textMesh);
-      
-  
-
     });
-    // for (let i = 0; i < textGroup.children.length; i++) {
-    //     textGroup.children[i].lookAt(camera.position);
-    // }
 
-    // scene.add(textGroup);
+    return textGroup;
   };
-  loadFont();
 
-  return textGroup;
+  return loadFont().then(createText);
 };

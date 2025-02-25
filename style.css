@@ -24,8 +24,8 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  /* display: flex;
+  place-items: center; */
   min-width: 320px;
   min-height: 100vh;
 }
@@ -40,6 +40,11 @@ h1 {
   margin: 0 auto;
   /* padding: 2rem; */
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
 }
 
 .logo {
@@ -118,4 +123,13 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+#content_layer_container{
+  width: 100%;
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-export const physicsScaleRate = 1;
+// export const physicsScaleRate = 1;
 // export const physicsScaleRate = 9.8;
-// export const physicsScaleRate = 60;
+export const physicsScaleRate = 60;
 
 
 export const THEME = {
