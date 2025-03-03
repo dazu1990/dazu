@@ -10,7 +10,7 @@ import { THEME, physicsScaleRate } from '../../constants';
 import { randNum } from '../../util';
 import { rand } from 'three/webgpu';
 
-const debug = true;
+const debug = false;
 
 export const initTilt = () => {
   console.log('Tilt scene');
@@ -23,12 +23,14 @@ export const initTilt = () => {
   let physicsWorld;
 
   let spheres = [];
-  const numOfSpheres = 1000;
+  const numOfSpheres = 900;
 
   let controls;
   let eventQueue;
 
   let platform, platformBody, platformCollider;
+  let walls = [];
+  let wallBodies = [];
 
   let logo, logoBodies = [], logoColliders = [];
 
@@ -57,8 +59,9 @@ export const initTilt = () => {
       1,
       10000,
     );
-    camera.position.set(0, 1000, 0);
-    // camera.position.set(0, 50, 1000);
+    // camera.position.set(0, 1000, 0);
+    // TO DO: set camera position relative to window height
+    camera.position.set(0, window.innerHeight *1.3, 0);
 
     camera.lookAt(0, 0, 0);
 
@@ -90,11 +93,24 @@ export const initTilt = () => {
     platform = createPlatform(scene);
     const getPlatformBoundingBoxPoints = new THREE.Box3().setFromObject(platform.mesh);
 
+    const platformData = createPlatform(scene);
+    
+    platform = {mesh: platformData.mesh, rigidBody: platformData.rigidBody, collider: platformData.collider};
+
     platformBody = physicsWorld.createRigidBody(platform.rigidBody);
+    
     platformCollider = physicsWorld.createCollider(platform.collider, platformBody);
 
     rotateGroup.add(platform.mesh);
     scene.add(rotateGroup);
+    
+    console.log('platformData', platformData);
+    platformData.wallColliders.forEach((wallCollider) => {
+      const wallBody = physicsWorld.createCollider(wallCollider, platformBody);
+      // joinBodies(platformBody, wallBody);
+      wallBodies.push(wallBody);
+
+    });
 
     
     createLogo(scene, camera, physicsWorld).then((logoGroup) => {
@@ -165,19 +181,24 @@ export const initTilt = () => {
   const updateRotateGroup = () => {
     const deltaX = mouse.x - mouse.oldX;
     const deltaY = mouse.y - mouse.oldY;
-
+  
+    // Create quaternions for the rotations around the x and y axes
     const quaternionX = new THREE.Quaternion();
     const quaternionZ = new THREE.Quaternion();
-
-    quaternionX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaY * 0.35);
-    quaternionZ.setFromAxisAngle(new THREE.Vector3(0, 0, 1), deltaX * 0.35);
-
+  
+    // Set the quaternions based on the mouse delta values
+    quaternionX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaY * 0.35); // Rotation around x-axis
+    quaternionZ.setFromAxisAngle(new THREE.Vector3(0, 0, 1), deltaX * 0.35); // Rotation around z-axis
+  
+    // Multiply the current quaternion by the new quaternions
     rotateGroup.quaternion.multiplyQuaternions(quaternionX, rotateGroup.quaternion);
     rotateGroup.quaternion.multiplyQuaternions(quaternionZ, rotateGroup.quaternion);
-
+  
+    // Update the platform body's rotation to match the rotateGroup's quaternion
     const quaternion = rotateGroup.quaternion;
     platformBody.setRotation({ w: quaternion.w, x: quaternion.x, y: quaternion.y, z: quaternion.z });
-
+  
+    // Update the old mouse position
     mouse.oldX = mouse.x;
     mouse.oldY = mouse.y;
   };
@@ -233,7 +254,7 @@ export const initTilt = () => {
       const quaternion = new THREE.Quaternion();
       const scale = new THREE.Vector3();
 
-      console.log('letter', letter);
+      // console.log('letter', letter);
 
       letter.matrixWorld.decompose(position, quaternion, scale);
 

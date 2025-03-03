@@ -68,31 +68,33 @@ export const createLogo = (scene, camera, physicsWorld) => {
       switch (i) {
         case 0:
           // top-left corner - D
-          textMesh.position.x = -((window.innerWidth * paddingMultiplier) - centerXOffset) * 1.5;
+          textMesh.position.x = -((window.innerWidth * paddingMultiplier) - (centerXOffset));
           textMesh.position.z = -(window.innerHeight * paddingMultiplier) - centerYOffset;
           break;
         case 1:
           // Top-right corner - A
-          textMesh.position.x = (window.innerWidth * paddingMultiplier) + centerXOffset;
+          textMesh.position.x = (window.innerWidth * paddingMultiplier) + (centerXOffset * 3);
           textMesh.position.z = -(window.innerHeight * paddingMultiplier) - centerYOffset;
           break;
 
         case 2:
           // Bottom-left corner - Z
-          textMesh.position.x = -((window.innerWidth * paddingMultiplier) - centerXOffset) * 1.5;
+          textMesh.position.x = -((window.innerWidth * paddingMultiplier) - (centerXOffset));
           textMesh.position.z = (window.innerHeight * paddingMultiplier) - centerYOffset;
           break;
         case 3:
           // bottom-right corner - U
-          textMesh.position.x = (window.innerWidth * paddingMultiplier) + centerXOffset;
+          textMesh.position.x = (window.innerWidth * paddingMultiplier) + (centerXOffset * 3);
           textMesh.position.z = (window.innerHeight * paddingMultiplier) - centerYOffset;
           break;
       }
 
-      textMesh.position.y = 15;
+      textMesh.position.y = depth * 1.5;
       textMesh.castShadow = true;
 
       textMesh.rotation.x = camera.rotation.x;
+      textMesh.castShadow = true;
+      textMesh.receiveShadow = true;
 
       // Create the physics body and collider for the letter
       const vertices = [];

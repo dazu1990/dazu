@@ -5,9 +5,9 @@ import { randNum } from '../../util';
 import { rand } from 'three/tsl';
 
 export const createSphere = (startX, startY, startZ) => {
-  console.log('createSphere', startX, startY, startZ);
+  // console.log('createSphere', startX, startY, startZ);
   let pos = { x: startX, y: startY, z: startZ };
-  let radius = randNum(15, 25);
+  let radius = randNum(10, 25);
 
   const colors = [
     THEME.colors.three.org, 
