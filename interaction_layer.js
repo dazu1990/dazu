@@ -2,17 +2,15 @@ import { initLandscape } from './ThreeScenes/Landscape/init';
 import { initTilt } from './ThreeScenes/Tilt/init';
 
 
-export const setupInteractionLayer = () => {
-  console.log('Setting up interaction layer');
+export const setupInteractionLayer = (interactionDiv) => {
+  console.log('Setting up interaction layer', interactionDiv);
 
   switch (window.location.pathname) {
     case '/landscape':
-      initLandscape();
+      initLandscape(interactionDiv);
     break;
     default:
-      initTilt();
-
-      console.log('No scene found');
+      initTilt(interactionDiv);
     break;
   }
 

@@ -2,25 +2,27 @@ import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-import { THEME, physicsScaleRate } from '../../constants';
+import { THEME, physicsScaleRate, logoHeight, maxSphereDiameter } from '../../constants';
 
-export const createLogo = (scene, camera, physicsWorld) => {
+export const createLogo = ( camera) => {
   let textGroup = new THREE.Group();
   let text = ['D', 'A', 'Z', 'U'],
     bevelEnabled = true,
     font = undefined;
 
-  const depth = 100,
-    size = (window.innerWidth * 0.35) / 2,
+  const depth = maxSphereDiameter * 1.25,
+    size = (window.innerWidth * 0.3) / 2,
     curveSegments = 2,
     bevelThickness = 0.2,
-    bevelSize = 0.2;
+    bevelSize = 0.2,
+    yFloatHeight = logoHeight;
 
   const themeColors = THEME.colors.three;
 
-  const defaultTextMaterial = new THREE.MeshPhongMaterial({
+  const defaultTextMaterial = new THREE.MeshToonMaterial({
     color: themeColors.org,
-    flatShading: true,
+    emissive : themeColors.org,
+    emissiveIntensity: 0.75,
   });
 
   const loadFont = () => {
@@ -89,8 +91,8 @@ export const createLogo = (scene, camera, physicsWorld) => {
           break;
       }
 
-      textMesh.position.y = depth * 1.5;
-      textMesh.castShadow = true;
+      textMesh.position.y = yFloatHeight;
+      // textMesh.castShadow = true;
 
       textMesh.rotation.x = camera.rotation.x;
       textMesh.castShadow = true;
