@@ -63,7 +63,7 @@ export const createPlatform = () => {
         pos.x / physicsScaleRate,
         pos.y / physicsScaleRate,
         pos.z / physicsScaleRate
-    );
+    ).setCcdEnabled(true);
 
     return { mesh: platformMesh, rigidBody, collider };
 };

@@ -192,11 +192,34 @@ export const initTilt = (interactionDiv) => {
     points = new THREE.Points(pointsGeo, pointsMaterial);
     scene.add(points);
   };
+  
 
   const setupPhysicsWorld = () => {
     const earthGravity = 9.81;
     let gravity = { x: 0.0, y: -earthGravity, z: 0.0 };
+    
+    // Create physics world
     physicsWorld = new RAPIER.World(gravity);
+    
+    // Try to set parameters after creation
+    try {
+      // Newer Rapier versions might use this
+      physicsWorld.setSolverIterations(6);
+      physicsWorld.setPredictionDistance(0.01 * physicsScaleRate);
+    } catch (e) {
+      console.log("Could not set physics parameters directly, trying alternative method");
+      try {
+        // Alternative approach
+        const params = physicsWorld.getIntegrationParameters();
+        if (params) {
+          params.numSolverIterations = 6;
+          params.predictionDistance = 0.01 * physicsScaleRate;
+        }
+      } catch (e2) {
+        console.log("Could not set physics parameters: ", e2);
+      }
+    }
+    
     eventQueue = new RAPIER.EventQueue(true);
   };
 
@@ -213,12 +236,16 @@ export const initTilt = (interactionDiv) => {
   };
 
   const updateRotateGroup = () => {
-    const deltaX = mouse.x - mouse.oldX;
-    const deltaY = mouse.y - mouse.oldY;
+    const maxRotationSpeed = 0.5; // Adjust this value as needed
+
+    // Calculate deltas with clamping
+    const deltaX = Math.max(-maxRotationSpeed, Math.min(maxRotationSpeed, mouse.x - mouse.oldX));
+    const deltaY = Math.max(-maxRotationSpeed, Math.min(maxRotationSpeed, mouse.y - mouse.oldY));
 
     // Create quaternions for the rotations around the x and y axes
     const quaternionX = new THREE.Quaternion();
     const quaternionZ = new THREE.Quaternion();
+    
 
     // Set the quaternions based on the mouse delta values
     quaternionX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaY * 0.35); // Rotation around x-axis
@@ -287,6 +314,8 @@ export const initTilt = (interactionDiv) => {
 
   const animate = () => {
     const deltaTime = clock.getDelta();
+    const maxDeltaTime = 1/60; // Cap at 60fps equivalent
+    const actualDeltaTime = Math.min(deltaTime, maxDeltaTime);
 
     spheres.forEach((sphere) => {
       let position = sphere.createdBody.translation();
@@ -327,10 +356,15 @@ export const initTilt = (interactionDiv) => {
       });
     });
 
-    physicsWorld.step(eventQueue);
+    // More accurate physics stepping with sub-steps
+    const numSubsteps = 3; // Increase for better accuracy, decrease for performance
+    const subDelta = actualDeltaTime / numSubsteps;
+    
+    for (let i = 0; i < numSubsteps; i++) {
+        physicsWorld.step(eventQueue, subDelta);
+    }
+
     renderFrame();
-    // physicsWorld.step(eventQueue);
-    // physicsWorld.step(eventQueue, deltaTime, 10, 1 / 240);
     if (debug) renderDebugView();
   };
 
