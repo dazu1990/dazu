@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-import { THEME, physicsScaleRate, logoHeight, maxSphereDiameter } from '../../constants';
+import { THEME, physicsScaleRate, logoHeight, maxSphereDiameter, windowHeight } from '../../constants';
 
 export const createLogo = ( camera) => {
   let textGroup = new THREE.Group();
@@ -71,23 +71,23 @@ export const createLogo = ( camera) => {
         case 0:
           // top-left corner - D
           textMesh.position.x = -((window.innerWidth * paddingMultiplier) - (centerXOffset));
-          textMesh.position.z = -(window.innerHeight * paddingMultiplier) - centerYOffset;
+          textMesh.position.z = -(windowHeight * paddingMultiplier) - centerYOffset;
           break;
         case 1:
           // Top-right corner - A
           textMesh.position.x = (window.innerWidth * paddingMultiplier) + (centerXOffset * 3);
-          textMesh.position.z = -(window.innerHeight * paddingMultiplier) - centerYOffset;
+          textMesh.position.z = -(windowHeight * paddingMultiplier) - centerYOffset;
           break;
 
         case 2:
           // Bottom-left corner - Z
           textMesh.position.x = -((window.innerWidth * paddingMultiplier) - (centerXOffset));
-          textMesh.position.z = (window.innerHeight * paddingMultiplier) - centerYOffset;
+          textMesh.position.z = (windowHeight * paddingMultiplier) - centerYOffset;
           break;
         case 3:
           // bottom-right corner - U
           textMesh.position.x = (window.innerWidth * paddingMultiplier) + (centerXOffset * 3);
-          textMesh.position.z = (window.innerHeight * paddingMultiplier) - centerYOffset;
+          textMesh.position.z = (windowHeight * paddingMultiplier) - centerYOffset;
           break;
       }
 

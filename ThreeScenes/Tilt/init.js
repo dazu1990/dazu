@@ -5,7 +5,7 @@ import { createLogo } from './createLogo';
 import { createPlatform } from './createPlatform';
 import { createSphere } from './createSphere';
 
-import { THEME, logoHeight, physicsScaleRate, wallThickness, maxSphereDiameter } from '../../constants';
+import { THEME, logoHeight, physicsScaleRate, wallThickness, maxSphereDiameter, windowHeight } from '../../constants';
 import { randNum } from '../../util';
 
 const debug = true;
@@ -42,9 +42,10 @@ export const initTilt = (interactionDiv) => {
     renderFrame();
 
     window.addEventListener('resize', onWindowResize);
-    document.addEventListener('mousedown', onMouseDown);
-    document.addEventListener('mouseup', onMouseUp);
+    // document.addEventListener('mousedown', onMouseDown);
+    // document.addEventListener('mouseup', onMouseUp);
     document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('click', onClick);
   };
 
   const setupGraphics = () => {
@@ -55,21 +56,21 @@ export const initTilt = (interactionDiv) => {
 
     camera = new THREE.PerspectiveCamera(
       50,
-      window.innerWidth / window.innerHeight,
+      window.innerWidth / windowHeight,
       1,
       10000,
     );
 
     // TO DO: set camera position relative to window height
-    camera.position.set(0, window.innerHeight * 1.5, 0);
-    // camera.position.set(0, window.innerHeight *1.3, 500);
+    camera.position.set(0, windowHeight * 1.5, 0);
+    // camera.position.set(0, windowHeight *1.3, 500);
 
     camera.lookAt(0, 0, 0);
 
     const dirLight1 = new THREE.DirectionalLight(0xffffff, 3);
     dirLight1.position.set(
       500,
-      window.innerHeight * 1.5,
+      windowHeight * 1.5,
       -500
     );
     scene.add(dirLight1);
@@ -83,16 +84,14 @@ export const initTilt = (interactionDiv) => {
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth, windowHeight);
     renderer.setAnimationLoop(animate);
     interactionDiv.appendChild(renderer.domElement);
 
     // Add objects to the scene
 
     platform = createPlatform(scene);
-    const getPlatformBoundingBoxPoints = new THREE.Box3().setFromObject(
-      platform.mesh,
-    );
+    
 
     const platformData = createPlatform(scene);
 
@@ -135,35 +134,45 @@ export const initTilt = (interactionDiv) => {
       });
     });
 
-    const sphereBoundBuffer = (wallThickness + maxSphereDiameter/2);
-    for (let i = 0; i < numOfSpheres; i++) {
-      const x = randNum(
-        getPlatformBoundingBoxPoints.min.x + sphereBoundBuffer,
-        getPlatformBoundingBoxPoints.max.x - sphereBoundBuffer,
-      );
-      const y = randNum(logoHeight / 2, logoHeight - 25);
-      const z = randNum(
-        getPlatformBoundingBoxPoints.min.z + sphereBoundBuffer,
-        getPlatformBoundingBoxPoints.max.z - sphereBoundBuffer,
-      );
-      // const z = Math.random() * (getPlatformBoundingBoxPoints.max.z - getPlatformBoundingBoxPoints.min.z) + getPlatformBoundingBoxPoints.min.z;
-      let tempSphere = createSphere(x, y, z);
-      tempSphere.createdBody = physicsWorld.createRigidBody(
-        tempSphere.rigidBody,
-      );
-      tempSphere.createdCollider = physicsWorld.createCollider(
-        tempSphere.colliderBody,
-        tempSphere.createdBody,
-      );
-      spheres.push(tempSphere);
-      scene.add(tempSphere.mesh);
-    }
+    generateSpheres();
 
     if (debug) {
       setupPhysicsDebug();
     }
 
     // controls = new OrbitControls(camera, renderer.domElement);
+  };
+
+  const generateSpheres = () => {
+    if (spheres.length < 2000) {
+      const getPlatformBoundingBoxPoints = new THREE.Box3().setFromObject(
+        platform.mesh,
+      );
+      const sphereBoundBuffer = (wallThickness + maxSphereDiameter);
+      for (let i = 0; i < numOfSpheres; i++) {
+        const x = randNum(
+          getPlatformBoundingBoxPoints.min.x + sphereBoundBuffer,
+          getPlatformBoundingBoxPoints.max.x - sphereBoundBuffer,
+        );
+        const y = randNum(logoHeight / 2, logoHeight - 25);
+        const z = randNum(
+          getPlatformBoundingBoxPoints.min.z + sphereBoundBuffer,
+          getPlatformBoundingBoxPoints.max.z - sphereBoundBuffer,
+        );
+        // const z = Math.random() * (getPlatformBoundingBoxPoints.max.z - getPlatformBoundingBoxPoints.min.z) + getPlatformBoundingBoxPoints.min.z;
+        let tempSphere = createSphere(x, y, z);
+        tempSphere.createdBody = physicsWorld.createRigidBody(
+          tempSphere.rigidBody,
+        );
+        tempSphere.createdCollider = physicsWorld.createCollider(
+          tempSphere.colliderBody,
+          tempSphere.createdBody,
+        );
+        spheres.push(tempSphere);
+        scene.add(tempSphere.mesh);
+      }
+    }
+    
   };
 
   const joinBodies = (body1, body2) => {
@@ -234,40 +243,46 @@ export const initTilt = (interactionDiv) => {
       z: quaternion.z,
     });
 
+
     // Update the old mouse position
     mouse.oldX = mouse.x;
     mouse.oldY = mouse.y;
   };
 
-  const onMouseDown = (event) => {
+  const onClick = (event) => {
     event.preventDefault();
-    mouse.down = true;
-    mouse.oldX = mouse.x;
-    mouse.oldY = mouse.y;
-  };
+    generateSpheres();
+  }
 
-  const onMouseUp = (event) => {
-    event.preventDefault();
-    mouse.down = false;
-    // mouse.oldX = mouse.x;
-    // mouse.oldY = mouse.y;
-    mouse.oldX = 0;
-    mouse.oldY = 0;
-  };
+  // const onMouseDown = (event) => {
+  //   event.preventDefault();
+  //   mouse.down = true;
+  //   mouse.oldX = mouse.x;
+  //   mouse.oldY = mouse.y;
+  // };
+
+  // const onMouseUp = (event) => {
+  //   event.preventDefault();
+  //   mouse.down = false;
+  //   // mouse.oldX = mouse.x;
+  //   // mouse.oldY = mouse.y;
+  //   mouse.oldX = 0;
+  //   mouse.oldY = 0;
+  // };
 
   const onMouseMove = (event) => {
     event.preventDefault();
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    if (mouse.down) {
+    mouse.y = -(event.clientY / windowHeight) * 2 + 1;
+    // if (mouse.down) {
       updateRotateGroup();
-    }
+    // }
   };
 
   const onWindowResize = () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.aspect = window.innerWidth / windowHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth, windowHeight);
   };
 
   const animate = () => {
@@ -312,8 +327,9 @@ export const initTilt = (interactionDiv) => {
       });
     });
 
-    renderFrame();
     physicsWorld.step(eventQueue);
+    renderFrame();
+    // physicsWorld.step(eventQueue);
     // physicsWorld.step(eventQueue, deltaTime, 10, 1 / 240);
     if (debug) renderDebugView();
   };

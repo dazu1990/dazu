@@ -9,6 +9,8 @@ export const logoHeight = 350;
 export const maxSphereDiameter = 30;
 export const wallThickness = 30;
 
+export const windowHeight = window.innerHeight;
+
 export const THEME = {
     colors:{
         hex:{

@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
-import { THEME, physicsScaleRate, wallThickness } from '../../constants';
+import { THEME, physicsScaleRate, wallThickness, windowHeight } from '../../constants';
 
 export const createPlatform = () => {
     let pos = {x: 0, y: 0, z: 0};
-    let scale = {x: window.innerWidth, y: 15, z: window.innerHeight};
-    const baseHeight = 10;
+    let scale = {x: window.innerWidth, y: 15, z: windowHeight};
+    const baseHeight = 100;
     
     const platformMaterial = new THREE.MeshLambertMaterial({
         color: THEME.colors.three.dpur,
@@ -14,6 +14,7 @@ export const createPlatform = () => {
     });
 
     const baseGeometry = new THREE.BoxGeometry(scale.x, baseHeight, scale.z);
+    baseGeometry.translate(pos.x, pos.y - baseHeight / 2, pos.z);
     const wallHeight = scale.y * 20;
 
     const wallGeometries = [];
