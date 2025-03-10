@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d';
+import { BufferGeometryUtils } from 'three/addons/utils/BufferGeometryUtils.js';
 import { THEME, physicsScaleRate } from '../../constants';
 
 export const createPlatform = () => {
