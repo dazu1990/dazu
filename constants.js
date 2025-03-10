@@ -2,9 +2,12 @@ import { black } from '@tailwindcss/postcss7-compat/colors';
 import * as THREE from 'three';
 // export const physicsScaleRate = 1;
 // export const physicsScaleRate = 9.8;
-export const physicsScaleRate = 60;
+export const physicsScaleRate = 100;
+
+
 export const logoHeight = 350;
 export const maxSphereDiameter = 30;
+export const wallThickness = 30;
 
 export const THEME = {
     colors:{

@@ -5,7 +5,7 @@ import { createLogo } from './createLogo';
 import { createPlatform } from './createPlatform';
 import { createSphere } from './createSphere';
 
-import { THEME, logoHeight, physicsScaleRate } from '../../constants';
+import { THEME, logoHeight, physicsScaleRate, wallThickness, maxSphereDiameter } from '../../constants';
 import { randNum } from '../../util';
 
 const debug = true;
@@ -113,11 +113,6 @@ export const initTilt = (interactionDiv) => {
     scene.add(rotateGroup);
 
     console.log('platformData', platformData);
-    platformData.wallColliders.forEach((wallCollider) => {
-      const wallBody = physicsWorld.createCollider(wallCollider, platformBody);
-      // joinBodies(platformBody, wallBody);
-      wallBodies.push(wallBody);
-    });
 
     createLogo(camera).then((logoGroup) => {
       rotateGroup.add(logoGroup);
@@ -140,15 +135,16 @@ export const initTilt = (interactionDiv) => {
       });
     });
 
+    const sphereBoundBuffer = (wallThickness + maxSphereDiameter/2);
     for (let i = 0; i < numOfSpheres; i++) {
       const x = randNum(
-        getPlatformBoundingBoxPoints.min.x,
-        getPlatformBoundingBoxPoints.max.x,
+        getPlatformBoundingBoxPoints.min.x + sphereBoundBuffer,
+        getPlatformBoundingBoxPoints.max.x - sphereBoundBuffer,
       );
       const y = randNum(logoHeight / 2, logoHeight - 25);
       const z = randNum(
-        getPlatformBoundingBoxPoints.min.z,
-        getPlatformBoundingBoxPoints.max.z,
+        getPlatformBoundingBoxPoints.min.z + sphereBoundBuffer,
+        getPlatformBoundingBoxPoints.max.z - sphereBoundBuffer,
       );
       // const z = Math.random() * (getPlatformBoundingBoxPoints.max.z - getPlatformBoundingBoxPoints.min.z) + getPlatformBoundingBoxPoints.min.z;
       let tempSphere = createSphere(x, y, z);
