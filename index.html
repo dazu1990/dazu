@@ -54,12 +54,30 @@
       href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/src/tailwind.css" />
+    <link rel="preload" href="/src/tailwind.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="stylesheet" href="/src/styles.css" />
+    <style>
+      /* Inline critical CSS */
+      body { visibility: hidden; }
+      #loading_screen {
+        width: 100%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 20;
+        background: black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
   </head>
   <body>
     <div id="app">
-      <div id="interaction_layer_container"></div>
+      <div id="interaction_layer_container">
+        <div id="loading_screen">loading...</div>
+      </div>
       <div
         id="content_layer_container"
         class="w-full flex flex-wrap text-white z-10"
@@ -152,5 +170,10 @@
       </div>
     </div>
     <script type="module" src="/main.js"></script>
+    <script>
+      window.addEventListener('load', () => {
+        document.body.style.visibility = 'visible';
+      });
+    </script>
   </body>
 </html>

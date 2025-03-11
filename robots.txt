@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /private/
+Disallow: /temp/
+Disallow: /admin/
+
+# Allow all other pages to be crawled
+Allow: /
+
+# Sitemap location
+Sitemap: http://adriandz.ca/sitemap.xml
