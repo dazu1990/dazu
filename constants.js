@@ -5,9 +5,9 @@ import * as THREE from 'three';
 export const physicsScaleRate = 100;
 
 
-export const logoHeight = 350;
+export const logoHeight = 280;
 export const maxSphereDiameter = 30;
-export const wallThickness = 30;
+export const wallThickness = 10;
 
 export const windowHeight = window.innerHeight;
 

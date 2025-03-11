@@ -8,7 +8,7 @@ import { createSphere } from './createSphere';
 import { THEME, logoHeight, physicsScaleRate, wallThickness, maxSphereDiameter, windowHeight } from '../../constants';
 import { randNum } from '../../util';
 
-const debug = true;
+const debug = false;
 
 export const initTilt = (interactionDiv) => {
   console.log('Tilt scene');
@@ -36,16 +36,18 @@ export const initTilt = (interactionDiv) => {
 
   let pointsGeo, pointsMaterial, points;
 
+  let dirLight1;
+
   const init = () => {
     setupPhysicsWorld();
     setupGraphics();
     renderFrame();
 
     window.addEventListener('resize', onWindowResize);
-    // document.addEventListener('mousedown', onMouseDown);
-    // document.addEventListener('mouseup', onMouseUp);
     document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('click', onClick);
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mouseup', onMouseUp);
+    // document.addEventListener('click', onClick);
   };
 
   const setupGraphics = () => {
@@ -61,13 +63,10 @@ export const initTilt = (interactionDiv) => {
       10000,
     );
 
-    // TO DO: set camera position relative to window height
-    camera.position.set(0, windowHeight * 1.5, 0);
-    // camera.position.set(0, windowHeight *1.3, 500);
-
+    camera.position.set(0, windowHeight * 1.25, 0);
     camera.lookAt(0, 0, 0);
 
-    const dirLight1 = new THREE.DirectionalLight(0xffffff, 3);
+    dirLight1 = new THREE.DirectionalLight(0xffffff, 3);
     dirLight1.position.set(
       500,
       windowHeight * 1.5,
@@ -75,23 +74,13 @@ export const initTilt = (interactionDiv) => {
     );
     scene.add(dirLight1);
 
-    // const dirLight2 = new THREE.DirectionalLight(THEME.colors.three.pur, 3);
-    // dirLight2.position.set(-1, -1, -1);
-    // scene.add(dirLight2);
-
-    // const ambientLight = new THREE.AmbientLight(THEME.colors.three.pur, 0.5);
-    // scene.add(ambientLight);
-
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, windowHeight);
     renderer.setAnimationLoop(animate);
     interactionDiv.appendChild(renderer.domElement);
 
-    // Add objects to the scene
-
     platform = createPlatform(scene);
-    
 
     const platformData = createPlatform(scene);
 
@@ -111,8 +100,6 @@ export const initTilt = (interactionDiv) => {
     rotateGroup.add(platform.mesh);
     scene.add(rotateGroup);
 
-    console.log('platformData', platformData);
-
     createLogo(camera).then((logoGroup) => {
       rotateGroup.add(logoGroup);
       logoGroup.children.forEach((letter) => {
@@ -128,38 +115,48 @@ export const initTilt = (interactionDiv) => {
       });
       scene.add(rotateGroup);
 
-      // Join each logoBody with platformBody
       logoBodies.forEach((logoBody) => {
         joinBodies(logoBody, platformBody);
       });
     });
 
-    generateSpheres();
+    generateSpheres(true);
 
     if (debug) {
       setupPhysicsDebug();
     }
-
-    // controls = new OrbitControls(camera, renderer.domElement);
   };
 
-  const generateSpheres = () => {
+  const generateSpheres = (init) => {
+    let sphereAmount = init ? numOfSpheres : 2;
+    const sphereBoundBuffer = (wallThickness + maxSphereDiameter);
+    const getPlatformBoundingBoxPoints = new THREE.Box3().setFromObject(
+      platform.mesh,
+    );
+    const bounds = {
+      x: {
+        min: init ? getPlatformBoundingBoxPoints.min.x + sphereBoundBuffer : (mouse.x * (window.innerWidth/2)) - sphereBoundBuffer,
+        max: init ? getPlatformBoundingBoxPoints.max.x - sphereBoundBuffer : (mouse.x * (window.innerWidth/2)) + sphereBoundBuffer,
+      },
+      z: {
+        min: init ? getPlatformBoundingBoxPoints.min.z + sphereBoundBuffer : (-mouse.y *( window.innerHeight / 2)) - sphereBoundBuffer,
+        max: init ? getPlatformBoundingBoxPoints.max.z - sphereBoundBuffer : (-mouse.y * ( window.innerHeight / 2)) + sphereBoundBuffer,
+      },
+    }
+
     if (spheres.length < 2000) {
-      const getPlatformBoundingBoxPoints = new THREE.Box3().setFromObject(
-        platform.mesh,
-      );
-      const sphereBoundBuffer = (wallThickness + maxSphereDiameter);
-      for (let i = 0; i < numOfSpheres; i++) {
+      
+      for (let i = 0; i < sphereAmount; i++) {
         const x = randNum(
-          getPlatformBoundingBoxPoints.min.x + sphereBoundBuffer,
-          getPlatformBoundingBoxPoints.max.x - sphereBoundBuffer,
+          bounds.x.min,
+          bounds.x.max,
         );
         const y = randNum(logoHeight / 2, logoHeight - 25);
         const z = randNum(
-          getPlatformBoundingBoxPoints.min.z + sphereBoundBuffer,
-          getPlatformBoundingBoxPoints.max.z - sphereBoundBuffer,
+          bounds.z.min,
+          bounds.z.max,
         );
-        // const z = Math.random() * (getPlatformBoundingBoxPoints.max.z - getPlatformBoundingBoxPoints.min.z) + getPlatformBoundingBoxPoints.min.z;
+
         let tempSphere = createSphere(x, y, z);
         tempSphere.createdBody = physicsWorld.createRigidBody(
           tempSphere.rigidBody,
@@ -172,7 +169,6 @@ export const initTilt = (interactionDiv) => {
         scene.add(tempSphere.mesh);
       }
     }
-    
   };
 
   const joinBodies = (body1, body2) => {
@@ -192,34 +188,11 @@ export const initTilt = (interactionDiv) => {
     points = new THREE.Points(pointsGeo, pointsMaterial);
     scene.add(points);
   };
-  
 
   const setupPhysicsWorld = () => {
     const earthGravity = 9.81;
     let gravity = { x: 0.0, y: -earthGravity, z: 0.0 };
-    
-    // Create physics world
     physicsWorld = new RAPIER.World(gravity);
-    
-    // Try to set parameters after creation
-    try {
-      // Newer Rapier versions might use this
-      physicsWorld.setSolverIterations(6);
-      physicsWorld.setPredictionDistance(0.01 * physicsScaleRate);
-    } catch (e) {
-      console.log("Could not set physics parameters directly, trying alternative method");
-      try {
-        // Alternative approach
-        const params = physicsWorld.getIntegrationParameters();
-        if (params) {
-          params.numSolverIterations = 6;
-          params.predictionDistance = 0.01 * physicsScaleRate;
-        }
-      } catch (e2) {
-        console.log("Could not set physics parameters: ", e2);
-      }
-    }
-    
     eventQueue = new RAPIER.EventQueue(true);
   };
 
@@ -235,8 +208,10 @@ export const initTilt = (interactionDiv) => {
     );
   };
 
+  const dampingFactor = 0.008; // Adjust this value to control the damping speed
+
   const updateRotateGroup = () => {
-    const maxRotationSpeed = 0.5; // Adjust this value as needed
+    const maxRotationSpeed = 0.75; // Adjust this value as needed
 
     // Calculate deltas with clamping
     const deltaX = Math.max(-maxRotationSpeed, Math.min(maxRotationSpeed, mouse.x - mouse.oldX));
@@ -270,46 +245,106 @@ export const initTilt = (interactionDiv) => {
       z: quaternion.z,
     });
 
+    // Reset the rotation matrix to prevent accumulation
+    rotateGroup.matrix.identity();
+    rotateGroup.matrix.makeRotationFromQuaternion(rotateGroup.quaternion);
 
     // Update the old mouse position
     mouse.oldX = mouse.x;
     mouse.oldY = mouse.y;
   };
 
-  const onClick = (event) => {
+  const derotate = () => {
+    const identityQuaternion = new THREE.Quaternion();
+    rotateGroup.quaternion.slerp(identityQuaternion, dampingFactor);
+
+    // Update the platform body's rotation to match the rotateGroup's quaternion
+    const quaternion = rotateGroup.quaternion;
+    platformBody.setRotation({
+      w: quaternion.w,
+      x: quaternion.x,
+      y: quaternion.y,
+      z: quaternion.z,
+    });
+
+    // Reset the rotation matrix to prevent accumulation
+    rotateGroup.matrix.identity();
+    rotateGroup.matrix.makeRotationFromQuaternion(rotateGroup.quaternion);
+  };
+
+  const onMouseDown = (event) => {
     event.preventDefault();
-    generateSpheres();
+    mouse.down = true;
   }
-
-  // const onMouseDown = (event) => {
-  //   event.preventDefault();
-  //   mouse.down = true;
-  //   mouse.oldX = mouse.x;
-  //   mouse.oldY = mouse.y;
-  // };
-
-  // const onMouseUp = (event) => {
-  //   event.preventDefault();
-  //   mouse.down = false;
-  //   // mouse.oldX = mouse.x;
-  //   // mouse.oldY = mouse.y;
-  //   mouse.oldX = 0;
-  //   mouse.oldY = 0;
-  // };
+  const onMouseUp = (event) => {
+    event.preventDefault();
+    mouse.down = false;
+  }
 
   const onMouseMove = (event) => {
     event.preventDefault();
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / windowHeight) * 2 + 1;
-    // if (mouse.down) {
-      updateRotateGroup();
-    // }
+    
+    if (mouse.down) {
+      generateSpheres(false);
+    }
+
+    dirLight1.position.set(
+      1000 * mouse.x,
+      windowHeight * 1.5,
+      -1000 * mouse.y
+    );
+    dirLight1.lookAt(0, 0, 0);
+
+
+    updateRotateGroup();
   };
 
   const onWindowResize = () => {
     camera.aspect = window.innerWidth / windowHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, windowHeight);
+
+    // Adjust platform and other objects if necessary
+    platform.mesh.scale.set(window.innerWidth / platform.mesh.scale.x, 1, windowHeight / platform.mesh.scale.z);
+    platformBody.setTranslation({
+      x: platform.mesh.position.x / physicsScaleRate,
+      y: platform.mesh.position.y / physicsScaleRate,
+      z: platform.mesh.position.z / physicsScaleRate,
+    });
+
+    // Redraw the logo
+    createLogo(camera).then((logoGroup) => {
+      // Remove the old logo group
+      rotateGroup.children.forEach(child => {
+        if (child !== logoGroup) {
+          rotateGroup.remove(child);
+        }
+      });
+      // Add the new logo group
+      rotateGroup.add(logoGroup);
+      logoBodies = [];
+      logoColliders = [];
+      logoGroup.children.forEach((letter) => {
+        const letterBody = physicsWorld.createRigidBody(
+          letter.userData.rigidBody,
+        );
+        const letterCollider = physicsWorld.createCollider(
+          letter.userData.collider,
+          letterBody,
+        );
+        logoBodies.push(letterBody);
+        logoColliders.push(letterCollider);
+      });
+
+      // Join each logoBody with platformBody
+      logoBodies.forEach((logoBody) => {
+        joinBodies(logoBody, platformBody);
+      });
+    });
+
+    // Update any other necessary objects or settings
   };
 
   const animate = () => {
@@ -325,7 +360,7 @@ export const initTilt = (interactionDiv) => {
         position.z * physicsScaleRate,
       );
 
-      if (sphere.mesh.position.y < -1200) {
+      if (sphere.mesh.position.y < -3200) {
         spheres.splice(spheres.indexOf(sphere), 1);
         physicsWorld.removeRigidBody(sphere.createdBody);
         scene.remove(sphere.mesh);
@@ -337,10 +372,10 @@ export const initTilt = (interactionDiv) => {
       const position = new THREE.Vector3();
       const quaternion = new THREE.Quaternion();
       const scale = new THREE.Vector3();
-
-      // console.log('letter', letter);
-
-      letter.matrixWorld.decompose(position, quaternion, scale);
+      
+      if(letter) {
+        letter.matrixWorld.decompose(position, quaternion, scale);
+      }
 
       logoBody.setTranslation({
         x: position.x / physicsScaleRate,
@@ -355,6 +390,9 @@ export const initTilt = (interactionDiv) => {
         w: quaternion.w,
       });
     });
+    
+    // Apply derotation to rotateGroup
+    derotate();
 
     // More accurate physics stepping with sub-steps
     const numSubsteps = 3; // Increase for better accuracy, decrease for performance

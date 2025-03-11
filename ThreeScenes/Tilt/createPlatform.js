@@ -44,7 +44,8 @@ export const createPlatform = () => {
 
     // Create a single mesh from the merged geometry
     const platformMesh = new THREE.Mesh(mergedGeometry, platformMaterial);
-    platformMesh.receiveShadow = true;
+    platformMesh.visible = false;
+
 
     // Create the trimesh collider
     const vertices = [];
