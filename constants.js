@@ -1,4 +1,3 @@
-import { black } from '@tailwindcss/postcss7-compat/colors';
 import * as THREE from 'three';
 // export const physicsScaleRate = 1;
 // export const physicsScaleRate = 9.8;
