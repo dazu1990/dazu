@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
-import { THEME, physicsScaleRate, wallThickness, windowHeight } from '../../constants';
+import { THEME, physicsScaleRate, wallThickness } from '../../constants';
 
 export const createPlatform = () => {
     let pos = {x: 0, y: 0, z: 0};
-    let scale = {x: window.innerWidth, y: 15, z: windowHeight};
+    let scale = {x: window.innerWidth, y: 15, z: window.innerHeight};
     const baseHeight = 100;
     
     const platformMaterial = new THREE.MeshLambertMaterial({
@@ -45,6 +45,7 @@ export const createPlatform = () => {
     // Create a single mesh from the merged geometry
     const platformMesh = new THREE.Mesh(mergedGeometry, platformMaterial);
     platformMesh.visible = false;
+    platformMesh.userData.name = 'platform';
 
 
     // Create the trimesh collider

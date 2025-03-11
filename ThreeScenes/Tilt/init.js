@@ -5,10 +5,19 @@ import { createLogo } from './createLogo';
 import { createPlatform } from './createPlatform';
 import { createSphere } from './createSphere';
 
-import { THEME, logoHeight, physicsScaleRate, wallThickness, maxSphereDiameter, windowHeight } from '../../constants';
+import { THEME, logoHeight, physicsScaleRate, wallThickness, maxSphereDiameter} from '../../constants';
 import { randNum } from '../../util';
 
 const debug = false;
+
+let resizeTimeout;
+
+const debounce = (func, wait) => {
+  return (...args) => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => func.apply(this, args), wait);
+  };
+};
 
 export const initTilt = (interactionDiv) => {
   console.log('Tilt scene');
@@ -21,18 +30,14 @@ export const initTilt = (interactionDiv) => {
   let physicsWorld;
 
   let spheres = [];
-  const numOfSpheres = 900;
+  const numOfSpheres = (window.innerWidth /2) * 1.25;
 
-  let controls;
   let eventQueue;
 
   let platform, platformBody, platformCollider;
-  let walls = [];
-  let wallBodies = [];
 
-  let logo,
-    logoBodies = [],
-    logoColliders = [];
+  let logoBodies = [];
+  let logoColliders = [];
 
   let pointsGeo, pointsMaterial, points;
 
@@ -43,10 +48,10 @@ export const initTilt = (interactionDiv) => {
     setupGraphics();
     renderFrame();
 
-    window.addEventListener('resize', onWindowResize);
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mousedown', onMouseDown);
-    document.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('resize', debounce(onWindowResize, 200));
+    window.addEventListener('mousemove', onMouseMove);
+    interactionDiv.addEventListener('mousedown', onMouseDown);
+    interactionDiv.addEventListener('mouseup', onMouseUp);
     // document.addEventListener('click', onClick);
   };
 
@@ -55,31 +60,43 @@ export const initTilt = (interactionDiv) => {
 
     scene = new THREE.Scene();
     scene.background = colors.black;
+    scene.fog = new THREE.Fog(0x000000, window.innerHeight * 1.15, window.innerHeight * 1.25 );
+
 
     camera = new THREE.PerspectiveCamera(
       50,
-      window.innerWidth / windowHeight,
+      window.innerWidth / window.innerHeight,
       1,
       10000,
     );
 
-    camera.position.set(0, windowHeight * 1.25, 0);
+    camera.position.set(0, window.innerHeight * 1.25, 0);
     camera.lookAt(0, 0, 0);
 
     dirLight1 = new THREE.DirectionalLight(0xffffff, 3);
     dirLight1.position.set(
       500,
-      windowHeight * 1.5,
+      window.innerHeight * 1.5,
       -500
     );
     scene.add(dirLight1);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, windowHeight);
+    renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setAnimationLoop(animate);
     interactionDiv.appendChild(renderer.domElement);
 
+    setupRotateGroup();
+
+    generateSpheres(true);
+
+    if (debug) {
+      setupPhysicsDebug();
+    }
+  };
+
+  const setupRotateGroup = () => {
     platform = createPlatform(scene);
 
     const platformData = createPlatform(scene);
@@ -119,12 +136,6 @@ export const initTilt = (interactionDiv) => {
         joinBodies(logoBody, platformBody);
       });
     });
-
-    generateSpheres(true);
-
-    if (debug) {
-      setupPhysicsDebug();
-    }
   };
 
   const generateSpheres = (init) => {
@@ -208,7 +219,6 @@ export const initTilt = (interactionDiv) => {
     );
   };
 
-  const dampingFactor = 0.008; // Adjust this value to control the damping speed
 
   const updateRotateGroup = () => {
     const maxRotationSpeed = 0.75; // Adjust this value as needed
@@ -245,16 +255,14 @@ export const initTilt = (interactionDiv) => {
       z: quaternion.z,
     });
 
-    // Reset the rotation matrix to prevent accumulation
-    rotateGroup.matrix.identity();
-    rotateGroup.matrix.makeRotationFromQuaternion(rotateGroup.quaternion);
-
     // Update the old mouse position
     mouse.oldX = mouse.x;
     mouse.oldY = mouse.y;
   };
 
   const derotate = () => {
+    const dampingFactor = 0.05; // Adjust this value to control the derotation speed
+
     const identityQuaternion = new THREE.Quaternion();
     rotateGroup.quaternion.slerp(identityQuaternion, dampingFactor);
 
@@ -275,6 +283,8 @@ export const initTilt = (interactionDiv) => {
   const onMouseDown = (event) => {
     event.preventDefault();
     mouse.down = true;
+    generateSpheres(false);
+
   }
   const onMouseUp = (event) => {
     event.preventDefault();
@@ -284,7 +294,7 @@ export const initTilt = (interactionDiv) => {
   const onMouseMove = (event) => {
     event.preventDefault();
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / windowHeight) * 2 + 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     
     if (mouse.down) {
       generateSpheres(false);
@@ -292,7 +302,7 @@ export const initTilt = (interactionDiv) => {
 
     dirLight1.position.set(
       1000 * mouse.x,
-      windowHeight * 1.5,
+      window.innerHeight * 1.5,
       -1000 * mouse.y
     );
     dirLight1.lookAt(0, 0, 0);
@@ -302,49 +312,40 @@ export const initTilt = (interactionDiv) => {
   };
 
   const onWindowResize = () => {
-    camera.aspect = window.innerWidth / windowHeight;
+    camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, windowHeight);
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // Adjust platform and other objects if necessary
-    platform.mesh.scale.set(window.innerWidth / platform.mesh.scale.x, 1, windowHeight / platform.mesh.scale.z);
-    platformBody.setTranslation({
-      x: platform.mesh.position.x / physicsScaleRate,
-      y: platform.mesh.position.y / physicsScaleRate,
-      z: platform.mesh.position.z / physicsScaleRate,
+    // remove spheres
+    spheres.forEach((sphere) => {
+      physicsWorld.removeRigidBody(sphere.createdBody);
+      scene.remove(sphere.mesh);
     });
 
-    // Redraw the logo
-    createLogo(camera).then((logoGroup) => {
-      // Remove the old logo group
-      rotateGroup.children.forEach(child => {
-        if (child !== logoGroup) {
-          rotateGroup.remove(child);
-        }
-      });
-      // Add the new logo group
-      rotateGroup.add(logoGroup);
-      logoBodies = [];
-      logoColliders = [];
-      logoGroup.children.forEach((letter) => {
-        const letterBody = physicsWorld.createRigidBody(
-          letter.userData.rigidBody,
-        );
-        const letterCollider = physicsWorld.createCollider(
-          letter.userData.collider,
-          letterBody,
-        );
-        logoBodies.push(letterBody);
-        logoColliders.push(letterCollider);
-      });
+    spheres = [];
 
-      // Join each logoBody with platformBody
-      logoBodies.forEach((logoBody) => {
-        joinBodies(logoBody, platformBody);
-      });
+    // Remove the old platform and logo group
+    console.log('rotateGroup:', rotateGroup);
+    scene.remove(rotateGroup);
+    rotateGroup.children = [];
+
+    logoBodies = [];
+    logoColliders = [];
+
+    // remove from physics world
+    physicsWorld.removeRigidBody(platformBody);
+    physicsWorld.removeCollider(platformCollider);
+    logoBodies.forEach((logoBody) => {
+      physicsWorld.removeRigidBody(logoBody);
     });
 
-    // Update any other necessary objects or settings
+    
+
+    // Create a new platform and logo group
+    setupRotateGroup();
+
+    generateSpheres(true);
+
   };
 
   const animate = () => {
@@ -392,7 +393,10 @@ export const initTilt = (interactionDiv) => {
     });
     
     // Apply derotation to rotateGroup
-    derotate();
+    if(mouse.down === false){
+      derotate();
+
+    }
 
     // More accurate physics stepping with sub-steps
     const numSubsteps = 3; // Increase for better accuracy, decrease for performance

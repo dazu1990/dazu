@@ -2,12 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="assets/apple-touch-icon.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="assets/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="assets/favicon-16x16.png"
+    />
+    <link rel="manifest" href="assets/site.webmanifest" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DAZU - Adrian Davila-Zuniga</title>
     <meta
       name="description"
       content="DAZU - Adrian Davila-Zuniga, Developer and maker of absurd things"
+    />
+    <meta
+      name="tags"
+      content="DAZU, Adrian Davila-Zuniga, Developer, Software Engineer, Frontend, Toronto, Fullstack, Adrian"
     />
     <meta name="author" content="Adrian Davila-Zuniga" />
     <meta name="robots" content="index, follow" />
@@ -20,7 +43,7 @@
       property="og:description"
       content="DAZU - Adrian Davila-Zuniga, Developer and maker of absurd things"
     />
-    <meta property="og:image" content="/vite.svg" />
+    <meta property="og:image" content="/assets/image.png" />
     <meta property="og:url" content="http://adriandz.ca" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="DAZU - Adrian Davila-Zuniga" />
@@ -39,16 +62,24 @@
       <div id="interaction_layer_container"></div>
       <div
         id="content_layer_container"
-        class="w-full flex flex-wrap text-white"
+        class="w-full flex flex-wrap text-white z-10"
       >
-        <div class="w-full md:w-1/2 lg:w-1/3 p-4 text-right md:text-left ">
-          <h1 class="md:text-lg text-xl font-bold">DAZU || Adrian Davila-Zuniga</h1>
-          <p class="text-sm pb-2">Software Engineer and maker of absurd things.</p>
+        <div
+          class="w-full md:w-1/2 lg:w-1/3 p-4 text-right md:text-left md:bg-transparent md:hover:bg-black bg-black duration-300 transition ease-in-out"
+        >
+          <h1 class="md:text-lg text-xl font-bold">
+            <span>DAZU</span> || Adrian Davila-Zuniga
+          </h1>
+          <p class="text-sm pb-2">
+            Software Engineer and maker of absurd things.
+          </p>
           <ul class="flex flex-wrap justify-end md:justify-start">
             <li class="md:pr-0.5">
-              <a href="https://example.com">
+              <a
+                href="https://www.linkedin.com/in/adrian-davila-zuniga-8b5b7734/?trk=public-profile-join-page"
+              >
                 <svg
-                  class="w-10 h-10 md:w-6 md:h-6 text-white dark:text-white fill:currentColor hover:text-gray-300 dark:hover:text-gray-300"
+                  class="w-10 h-10 md:w-6 md:h-6 text-white dark:text-white fill:currentColor hover:opacity-50 transition-opacity duration-250"
                   aria-hidden="true"
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -66,9 +97,9 @@
               </a>
             </li>
             <li class="pr-1">
-              <a href="https://another-example.com"
+              <a href="https://github.com/dazu1990"
                 ><svg
-                  class="w-10 h-10 md:w-6 md:h-6  text-white dark:text-white fill:currentColor hover:text-gray-300 dark:hover:text-gray-300"
+                  class="w-10 h-10 md:w-6 md:h-6 text-white dark:text-white fill:currentColor hover:opacity-50 transition-opacity duration-250"
                   aria-hidden="true"
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -85,9 +116,9 @@
               </a>
             </li>
             <li class="pr-1">
-              <a href="mailto:email@example.com"
+              <a href="mailto:adrian.davilazuniga@gmail.com"
                 ><svg
-                  class="w-10 h-10 md:w-6 md:h-6 text-white dark:text-white fill:currentColor hover:text-gray-300 dark:hover:text-gray-300"
+                  class="w-10 h-10 md:w-6 md:h-6 text-white dark:text-white fill:currentColor hover:opacity-50 transition-opacity duration-250"
                   aria-hidden="true"
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"

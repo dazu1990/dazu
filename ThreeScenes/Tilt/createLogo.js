@@ -2,13 +2,20 @@ import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-import { THEME, physicsScaleRate, logoHeight, maxSphereDiameter, windowHeight } from '../../constants';
+import { THEME, physicsScaleRate, logoHeight, maxSphereDiameter } from '../../constants';
 
 export const createLogo = ( camera) => {
   let textGroup = new THREE.Group();
   let text = ['D', 'A', 'Z', 'U'],
     bevelEnabled = true,
     font = undefined;
+
+  // get window ratio
+  const windowRatio = window.innerWidth / window.innerHeight;
+  const isPortrait = windowRatio < 1.095;
+  console.log('isPortrait', isPortrait);
+
+  console.log('windowRatio', windowRatio);
 
   const depth = maxSphereDiameter * 1.25,
     size = (window.innerWidth * 0.3) / 2,
@@ -43,7 +50,6 @@ export const createLogo = ( camera) => {
   };
 
   const createText = () => {
-    console.log('createText');
     text.forEach((letter, i) => {
       let textGeo = new TextGeometry(letter, {
         font: font,
@@ -71,23 +77,23 @@ export const createLogo = ( camera) => {
         case 0:
           // top-left corner - D
           textMesh.position.x = -((window.innerWidth * paddingMultiplier) - (centerXOffset));
-          textMesh.position.z = -(windowHeight * paddingMultiplier) - centerYOffset;
+          textMesh.position.z = isPortrait ? -(window.innerHeight * paddingMultiplier) - (centerYOffset * (2 * windowRatio)) : -(window.innerHeight * paddingMultiplier) - centerYOffset;
           break;
         case 1:
           // Top-right corner - A
           textMesh.position.x = (window.innerWidth * paddingMultiplier) + (centerXOffset * 3);
-          textMesh.position.z = -(windowHeight * paddingMultiplier) - centerYOffset;
+          textMesh.position.z = isPortrait ? -(window.innerHeight * paddingMultiplier) - (centerYOffset * (2 * windowRatio)) : -(window.innerHeight * paddingMultiplier) - centerYOffset;
           break;
 
         case 2:
           // Bottom-left corner - Z
           textMesh.position.x = -((window.innerWidth * paddingMultiplier) - (centerXOffset));
-          textMesh.position.z = (windowHeight * paddingMultiplier) - centerYOffset;
+          textMesh.position.z = isPortrait ? ((window.innerHeight * windowRatio) * paddingMultiplier) : (window.innerHeight * paddingMultiplier) - centerYOffset;
           break;
         case 3:
           // bottom-right corner - U
           textMesh.position.x = (window.innerWidth * paddingMultiplier) + (centerXOffset * 3);
-          textMesh.position.z = (windowHeight * paddingMultiplier) - centerYOffset;
+          textMesh.position.z = isPortrait ? ((window.innerHeight * windowRatio) * paddingMultiplier): (window.innerHeight * paddingMultiplier) - centerYOffset;
           break;
       }
 
@@ -117,8 +123,6 @@ export const createLogo = ( camera) => {
         }
       }
 
-      console.log('textGeo:', letter + '', textGeo);
-
       let collider = RAPIER.ColliderDesc.trimesh(vertices, indices);
 
       let rigidBody = RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(
@@ -137,9 +141,9 @@ export const createLogo = ( camera) => {
 
       textGroup.add(textMesh);
     });
-
     return textGroup;
   };
+  textGroup.userData.name = 'logoGroup';
 
   return loadFont().then(createText);
 };
