@@ -1,9 +1,8 @@
 import * as THREE from 'three';
-import RAPIER from '@dimforge/rapier3d';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import { THEME, physicsScaleRate, wallThickness } from '../../constants';
 
-export const createPlatform = () => {
+export const createPlatform = (RAPIER) => {
     let pos = {x: 0, y: 0, z: 0};
     let scale = {x: window.innerWidth, y: 15, z: window.innerHeight};
     const baseHeight = 100;
@@ -52,9 +51,13 @@ export const createPlatform = () => {
     const vertices = [];
     const indices = [];
 
-    mergedGeometry.attributes.position.array.forEach((v) => {
-        vertices.push(v / physicsScaleRate);
-    });
+    for (let i = 0; i < mergedGeometry.attributes.position.count; i++) {
+        vertices.push(
+            mergedGeometry.attributes.position.getX(i) / physicsScaleRate,
+            mergedGeometry.attributes.position.getY(i) / physicsScaleRate,
+            mergedGeometry.attributes.position.getZ(i) / physicsScaleRate
+        );
+    }
 
     for (let i = 0; i < mergedGeometry.index.count; i++) {
         indices.push(mergedGeometry.index.array[i]);

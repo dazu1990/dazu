@@ -1,4 +1,4 @@
-import RAPIER from '@dimforge/rapier3d';
+import RAPIER from '@dimforge/rapier3d-compat'
 
 export const joinBodies = (body1, body2, physicsWorld) => {
   const jointData = RAPIER.JointData.fixed(
@@ -25,4 +25,9 @@ export const randNum = (min, max) => {
     throw new RangeError('min should not be greater than max');
   }
   return Math.floor(Math.random() * (max - min + 1) + min);
+};
+
+export const initPhysics = async () => {
+  await RAPIER.init();
+  return RAPIER;
 };

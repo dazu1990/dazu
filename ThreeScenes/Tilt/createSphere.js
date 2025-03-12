@@ -1,9 +1,8 @@
-import RAPIER from '@dimforge/rapier3d';
 import * as THREE from 'three';
 import { THEME, physicsScaleRate, maxSphereDiameter } from '../../constants';
 import { randNum } from '../../util';
 
-export const createSphere = (startX, startY, startZ) => {
+export const createSphere = (startX, startY, startZ, RAPIER) => {
   // console.log('createSphere', startX, startY, startZ);
   let pos = { x: startX, y: startY, z: startZ };
   let radius = randNum(maxSphereDiameter / 2, maxSphereDiameter);

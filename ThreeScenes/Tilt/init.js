@@ -1,7 +1,6 @@
-import RAPIER from '@dimforge/rapier3d';
 import * as THREE from 'three';
 
-import { debounce, randNum, joinBodies } from '../../util';
+import { debounce, randNum, joinBodies, initPhysics } from '../../util';
 import { createSphere } from './createSphere';
 import { createPlatform } from './createPlatform';
 import { createLogo } from './createLogo';
@@ -17,8 +16,8 @@ import {
 
 const debug = false;
 
-export const initTilt = (interactionDiv) => {
-  console.log('Tilt scene');
+export const initTilt = async (interactionDiv) => {
+  const RAPIER = await initPhysics();
   const colors = THEME.colors.three;
   let resizeTimeout;
 
@@ -42,8 +41,8 @@ export const initTilt = (interactionDiv) => {
 
   let dirLight1;
 
-  const init = () => {
-    setupPhysicsWorld();
+  const init = async () => {
+    await setupPhysicsWorld();
     setupGraphics();
     renderFrame();
 
@@ -119,10 +118,8 @@ export const initTilt = (interactionDiv) => {
     }
   };
 
-  const setupRotateGroup = () => {
-    platform = createPlatform(scene);
-
-    const platformData = createPlatform(scene);
+  const setupRotateGroup = async () => {
+    const platformData = createPlatform(RAPIER);
 
     platform = {
       mesh: platformData.mesh,
@@ -140,7 +137,7 @@ export const initTilt = (interactionDiv) => {
     rotateGroup.add(platform.mesh);
     scene.add(rotateGroup);
 
-    createLogo(camera).then((logoGroup) => {
+    createLogo(camera, RAPIER).then((logoGroup) => {
       rotateGroup.add(logoGroup);
       logoGroup.children.forEach((letter) => {
         const letterBody = physicsWorld.createRigidBody(
@@ -169,10 +166,8 @@ export const initTilt = (interactionDiv) => {
     scene.add(points);
   };
 
-  const setupPhysicsWorld = () => {
-    const earthGravity = 9.81;
-    let gravity = { x: 0.0, y: -earthGravity, z: 0.0 };
-    physicsWorld = new RAPIER.World(gravity);
+  const setupPhysicsWorld = async () => {
+    physicsWorld = new RAPIER.World(new RAPIER.Vector3(0.0, -9.81, 0.0));
     eventQueue = new RAPIER.EventQueue(true);
   };
 
@@ -219,7 +214,7 @@ export const initTilt = (interactionDiv) => {
         const y = randNum(logoHeight / 2, logoHeight - 25);
         const z = randNum(bounds.z.min, bounds.z.max);
 
-        let tempSphere = createSphere(x, y, z);
+        let tempSphere = createSphere(x, y, z, RAPIER);
         tempSphere.createdBody = physicsWorld.createRigidBody(
           tempSphere.rigidBody,
         );
@@ -377,5 +372,5 @@ export const initTilt = (interactionDiv) => {
     renderer.render(scene, camera);
   };
 
-  init();
+  await init();
 };
