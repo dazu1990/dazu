@@ -1,6 +1,7 @@
 This is my personal site
 
-vite
-eslint + prettier
-Threejs
-vanilla javascript
+Tooling - Vite, ESlint, Prettier
+
+Rapier for the physics
+ThreeJS for the Canvas
+Tailwind CSS
