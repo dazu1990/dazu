@@ -17,6 +17,8 @@ import {
 const debug = false;
 
 export const initTilt = async (interactionDiv) => {
+
+   
   const RAPIER = await initPhysics();
   const colors = THEME.colors.three;
   let resizeTimeout;
@@ -59,13 +61,15 @@ export const initTilt = async (interactionDiv) => {
       'orientationchange',
       debounce(onWindowResize, 200, resizeTimeout),
     );
-    window.addEventListener('touchmove', onMouseMove, { passive: true });
-    interactionDiv.addEventListener('touchstart', onMouseDown, {
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    interactionDiv.addEventListener('touchstart', onTouchStart, {
       passive: true,
     });
-    interactionDiv.addEventListener('touchend', onMouseUp, { passive: true });
+    interactionDiv.addEventListener('touchend', onTouchEnd, { passive: true });
 
     document.addEventListener('fullscreenchange', onWindowResize);
+
+     
   };
 
   const setupGraphics = () => {
@@ -208,7 +212,7 @@ export const initTilt = async (interactionDiv) => {
       },
     };
 
-    if (spheres.length < 2000) {
+    if (spheres.length < numOfSpheres * 2) {
       for (let i = 0; i < sphereAmount; i++) {
         const x = randNum(bounds.x.min, bounds.x.max);
         const y = randNum(logoHeight / 2, logoHeight - 25);
@@ -273,6 +277,38 @@ export const initTilt = async (interactionDiv) => {
 
     updateRotateGroup(mouse, rotateGroup, platformBody);
   };
+
+  const onTouchStart = (event) => {
+    mouse.down = true;
+    const touch = event.touches[0];
+    mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+  };
+
+  const onTouchEnd = () => {
+    mouse.down = false;
+  };
+
+  const onTouchMove = (event) => {
+    event.preventDefault();
+    const touch = event.touches[0];
+    mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+
+    if (mouse.down) {
+      generateSpheres(false);
+    }
+
+    dirLight1.position.set(
+      1000 * mouse.x,
+      window.innerHeight * 1.5,
+      -1000 * mouse.y,
+    );
+    dirLight1.lookAt(0, 0, 0);
+
+    updateRotateGroup(mouse, rotateGroup, platformBody);
+  };
+
 
   const onWindowResize = () => {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -374,3 +410,4 @@ export const initTilt = async (interactionDiv) => {
 
   await init();
 };
+
