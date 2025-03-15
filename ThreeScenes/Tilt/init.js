@@ -1,9 +1,16 @@
 import * as THREE from 'three';
 
-import { debounce, randNum, joinBodies, initPhysics } from '../../util';
-import { createSphere } from './createSphere';
-import { createPlatform } from './createPlatform';
+import {
+  debounce,
+  initPhysics,
+  isIos,
+  isMobile,
+  joinBodies,
+  randNum,
+} from '../../util';
 import { createLogo } from './createLogo';
+import { createPlatform } from './createPlatform';
+import { createSphere } from './createSphere';
 import { updateRotateGroup } from './updateRotateGroup';
 
 import {
@@ -17,8 +24,6 @@ import {
 const debug = false;
 
 export const initTilt = async (interactionDiv) => {
-
-   
   const RAPIER = await initPhysics();
   const colors = THEME.colors.three;
   let resizeTimeout;
@@ -30,7 +35,9 @@ export const initTilt = async (interactionDiv) => {
   let physicsWorld;
 
   let spheres = [];
-  const numOfSpheres = (window.innerWidth / 2) * 1.25;
+  const numOfSpheres = isMobile()
+    ? window.innerWidth / 2
+    : (window.innerWidth / 2) * 1.25;
 
   let eventQueue;
 
@@ -42,6 +49,8 @@ export const initTilt = async (interactionDiv) => {
   let pointsGeo, pointsMaterial, points;
 
   let dirLight1;
+
+  let disableTiltDetection = isIos() ? true : false;
 
   const init = async () => {
     await setupPhysicsWorld();
@@ -57,10 +66,7 @@ export const initTilt = async (interactionDiv) => {
     interactionDiv.addEventListener('mousedown', onMouseDown);
     interactionDiv.addEventListener('mouseup', onMouseUp);
 
-    window.addEventListener(
-      'orientationchange',
-      debounce(onWindowResize, 200, resizeTimeout),
-    );
+    window.addEventListener('orientationchange', onWindowResize);
     window.addEventListener('touchmove', onTouchMove, { passive: false });
     interactionDiv.addEventListener('touchstart', onTouchStart, {
       passive: true,
@@ -69,7 +75,46 @@ export const initTilt = async (interactionDiv) => {
 
     document.addEventListener('fullscreenchange', onWindowResize);
 
-     
+    // Check if DeviceMotionEvent is supported
+    if (typeof DeviceMotionEvent !== 'undefined') {
+      // Listen for the devicemotion event
+      window.addEventListener('devicemotion', handleMotion);
+      console.log('devicemotion event listener added');
+    } else {
+      disableTiltDetection = true;
+      console.log('DeviceMotion not supported');
+    }
+  };
+
+  // Low-pass filter variables
+  let alphaFiltered = 0;
+  let betaFiltered = 0;
+  let gammaFiltered = 0;
+  const smoothingFactor = 0.1; // Adjust this value to control the smoothing
+
+  // Handle the motion data
+  const handleMotion = (event) => {
+    if (disableTiltDetection) return;
+    // Rotation rate
+    const alpha = event.rotationRate.alpha; // Rotation around Z-axis
+    const beta = event.rotationRate.beta; // Rotation around X-axis
+    const gamma = event.rotationRate.gamma; // Rotation around Y-axis
+
+    // Apply low-pass filter
+    alphaFiltered = alphaFiltered + smoothingFactor * (alpha - alphaFiltered);
+    betaFiltered = betaFiltered + smoothingFactor * (beta - betaFiltered);
+    gammaFiltered = gammaFiltered + smoothingFactor * (gamma - gammaFiltered);
+
+    // Update mouse position based on tilt
+    mouse.x = betaFiltered / -90; // Normalize to [-1, 1]
+    mouse.y = alphaFiltered / 90; // Normalize to [-1, 1]
+
+    if (Math.abs(mouse.x) > 1 || Math.abs(mouse.y) > 1) {
+      mouse.x = Math.sign(mouse.x) * 0.5;
+      mouse.y = Math.sign(mouse.y) * 0.5;
+    }
+
+    updateRotateGroup(mouse, rotateGroup, platformBody);
   };
 
   const setupGraphics = () => {
@@ -189,6 +234,7 @@ export const initTilt = async (interactionDiv) => {
 
   const generateSpheres = (init) => {
     let sphereAmount = init ? numOfSpheres : 2;
+    const maxSphereCount = isMobile() ? numOfSpheres * 1.5 : numOfSpheres * 2;
     const sphereBoundBuffer = wallThickness + maxSphereDiameter;
     const getPlatformBoundingBoxPoints = new THREE.Box3().setFromObject(
       platform.mesh,
@@ -212,7 +258,7 @@ export const initTilt = async (interactionDiv) => {
       },
     };
 
-    if (spheres.length < numOfSpheres * 2) {
+    if (spheres.length < maxSphereCount) {
       for (let i = 0; i < sphereAmount; i++) {
         const x = randNum(bounds.x.min, bounds.x.max);
         const y = randNum(logoHeight / 2, logoHeight - 25);
@@ -231,9 +277,10 @@ export const initTilt = async (interactionDiv) => {
       }
     }
   };
+  const derotateDampingFactor = isMobile() ? 0.025 : 0.05;
 
   const derotate = () => {
-    const dampingFactor = 0.05; // Adjust this value to control the derotation speed
+    const dampingFactor = derotateDampingFactor; // Adjust this value to control the derotation speed
 
     const identityQuaternion = new THREE.Quaternion();
     rotateGroup.quaternion.slerp(identityQuaternion, dampingFactor);
@@ -306,9 +353,10 @@ export const initTilt = async (interactionDiv) => {
     );
     dirLight1.lookAt(0, 0, 0);
 
-    updateRotateGroup(mouse, rotateGroup, platformBody);
+    if (disableTiltDetection) {
+      updateRotateGroup(mouse, rotateGroup, platformBody);
+    }
   };
-
 
   const onWindowResize = () => {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -410,4 +458,3 @@ export const initTilt = async (interactionDiv) => {
 
   await init();
 };
-
