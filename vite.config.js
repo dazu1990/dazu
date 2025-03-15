@@ -10,19 +10,22 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig(() => {
 
-
-  // Fallback to default paths if environment variables are not defined
   const sslKeyPath = path.resolve(__dirname, 'localhost.key');
   const sslCertPath = path.resolve(__dirname, 'localhost.crt');
 
-  return {
-    server: {
-      https: {
-        key: fs.readFileSync(sslKeyPath),
-        cert: fs.readFileSync(sslCertPath),
-      },
+  const serverConfig = {
+  };
+
+  if (sslKeyPath && sslCertPath) {
+    serverConfig.https = {
+      key: fs.readFileSync(sslKeyPath),
+      cert: fs.readFileSync(sslCertPath),
       host: '0.0.0.0', // Ensure the server is accessible externally
-    },
+    };
+  }
+
+  return {
+    server: serverConfig,
     plugins: [
       wasm(),
       topLevelAwait(),
